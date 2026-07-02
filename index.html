@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+<title>고객사 뉴스 모니터링</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>고객사 뉴스 모니터링</h1>
+    <p id="updatedAt" class="updated-at">업데이트 정보를 불러오는 중...</p>
+  </header>
+
+  <main class="container">
+    <section class="filter-section">
+      <div class="filter-group">
+        <label class="filter-title" for="searchInput">고객명 검색</label>
+        <input type="search" id="searchInput" class="search-input" placeholder="고객명 또는 관련명으로 검색" />
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-group filter-group--select">
+          <label class="filter-title" for="teamSelect">팀</label>
+          <select id="teamSelect" class="select-input"></select>
+        </div>
+        <div class="filter-group filter-group--select">
+          <label class="filter-title" for="cellSelect">셀</label>
+          <select id="cellSelect" class="select-input"></select>
+        </div>
+        <div class="filter-group filter-group--select">
+          <label class="filter-title" for="repSelect">개인(담당자)</label>
+          <select id="repSelect" class="select-input"></select>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-title">우선순위</span>
+        <div id="tagFilters" class="chip-row"></div>
+      </div>
+
+      <label class="major-toggle">
+        <input type="checkbox" id="majorOnly" />
+        메이저 언론사만 보기
+      </label>
+    </section>
+
+    <section class="summary-bar" id="summaryBar"></section>
+
+    <section id="articleList" class="article-list">
+      <p class="loading">뉴스를 불러오는 중입니다...</p>
+    </section>
+
+    <div class="load-more-wrap">
+      <button id="loadMoreBtn" class="load-more-btn" hidden>더보기</button>
+    </div>
+
+    <p id="emptyState" class="empty-state" hidden>조건에 맞는 기사가 없습니다.</p>
+  </main>
+
+  <footer class="footer">
+    <p>네이버 뉴스 검색 API 기반 · 매일 자동 갱신</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
