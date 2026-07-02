@@ -107,13 +107,15 @@ LIST_SEPARATORS = [",", "·", "、", "ㆍ", "/"]
 def is_relevant_article(title, description, query):
     """검색어(고객명)가 기사에서 실질적으로 다뤄지는 기사인지 확인.
 
-    네이버 뉴스 검색은 본문 어딘가에 검색어가 '포함'되기만 해도 결과로 반환하기 때문에,
-    여러 회사가 함께 언급되는 산업 동향/컨퍼런스 요약 기사에서 고객명이 스쳐 지나가듯
-    한 번 언급된 경우까지 딸려 온다. 이런 '나열형 언급'을 걸러내기 위한 필터.
+    네이버 뉴스 검색은 기사 원문 전체를 기준으로 검색어를 찾아 결과에 포함시키기 때문에,
+    API가 돌려주는 제목/요약(description) 스니펫에는 정작 검색어가 전혀 등장하지 않는
+    경우가 많다 (원문 뒷부분에만 있거나, 아예 다른 회사 위주 기사에 살짝 언급된 경우 등).
+    이런 경우 화면에는 '고객명' 뱃지만 붙고 실제 내용은 전혀 다른 회사 얘기로 보이게 된다.
 
-    1) 제목에 검색어가 있으면 확실한 관련 기사로 간주.
-    2) 본문에만 있으면, 검색어 주변(전후 20자)에 쉼표/가운뎃점 등 나열 구분자가
-       2개 이상 있는 경우 '여러 회사 중 하나로 언급'된 것으로 보고 제외한다.
+    1) 제목/본문 어디에도 검색어가 글자 그대로 없으면 무관한 기사로 보고 제외한다.
+    2) 제목에 검색어가 있으면 확실한 관련 기사로 간주한다.
+    3) 본문에만 있으면, 검색어 주변(전후 20자)에 쉼표/가운뎃점 등 나열 구분자가
+       2개 이상 있는 경우 '여러 회사가 나열된 기사 중 하나로 언급'된 것으로 보고 제외한다.
     """
     if not query:
         return True
@@ -121,17 +123,19 @@ def is_relevant_article(title, description, query):
     if not q:
         return True
 
-    title_l = (title or "").lower()
+    title = title or ""
+    desc = description or ""
+    title_l = title.lower()
+    desc_l = desc.lower()
+
+    if q not in title_l and q not in desc_l:
+        # 요약문 어디에도 고객명이 없다 -> 다른 회사 위주 기사일 가능성이 높으므로 제외
+        return False
+
     if q in title_l:
         return True
 
-    desc = description or ""
-    desc_l = desc.lower()
     idx = desc_l.find(q)
-    if idx == -1:
-        # 네이버 검색 자체가 query로 걸러주므로 이 경우는 드물지만, 못 찾으면 통과시킨다
-        return True
-
     start = max(0, idx - 20)
     end = min(len(desc), idx + len(q) + 20)
     window = desc[start:end]
