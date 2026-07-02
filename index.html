@@ -43,6 +43,10 @@
         <input type="checkbox" id="majorOnly" />
         메이저 언론사만 보기
       </label>
+
+      <div class="filter-actions">
+        <button id="resetFiltersBtn" class="reset-filters-btn" type="button">전체 필터 해제</button>
+      </div>
     </section>
 
     <section class="summary-bar" id="summaryBar"></section>
@@ -61,6 +65,8 @@
   <footer class="footer">
     <p>네이버 뉴스 검색 API 기반 · 매일 자동 갱신</p>
   </footer>
+
+  <button id="scrollTopBtn" class="scroll-top-btn" type="button" aria-label="맨 위로 이동" hidden>TOP</button>
 
   <script src="app.js"></script>
 </body>
