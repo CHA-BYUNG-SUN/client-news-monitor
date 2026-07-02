@@ -101,6 +101,46 @@ def resolve_tag(title, description, keyword_config):
     return None, default["label"], default["color"]
 
 
+LIST_SEPARATORS = [",", "·", "、", "ㆍ", "/"]
+
+
+def is_relevant_article(title, description, query):
+    """검색어(고객명)가 기사에서 실질적으로 다뤄지는 기사인지 확인.
+
+    네이버 뉴스 검색은 본문 어딘가에 검색어가 '포함'되기만 해도 결과로 반환하기 때문에,
+    여러 회사가 함께 언급되는 산업 동향/컨퍼런스 요약 기사에서 고객명이 스쳐 지나가듯
+    한 번 언급된 경우까지 딸려 온다. 이런 '나열형 언급'을 걸러내기 위한 필터.
+
+    1) 제목에 검색어가 있으면 확실한 관련 기사로 간주.
+    2) 본문에만 있으면, 검색어 주변(전후 20자)에 쉼표/가운뎃점 등 나열 구분자가
+       2개 이상 있는 경우 '여러 회사 중 하나로 언급'된 것으로 보고 제외한다.
+    """
+    if not query:
+        return True
+    q = query.strip().lower()
+    if not q:
+        return True
+
+    title_l = (title or "").lower()
+    if q in title_l:
+        return True
+
+    desc = description or ""
+    desc_l = desc.lower()
+    idx = desc_l.find(q)
+    if idx == -1:
+        # 네이버 검색 자체가 query로 걸러주므로 이 경우는 드물지만, 못 찾으면 통과시킨다
+        return True
+
+    start = max(0, idx - 20)
+    end = min(len(desc), idx + len(q) + 20)
+    window = desc[start:end]
+    separator_count = sum(window.count(sep) for sep in LIST_SEPARATORS)
+    if separator_count >= 2:
+        return False
+    return True
+
+
 def find_matched_sub_names(title, description, sub_names):
     """그룹 내 SUB고객명이 기사 제목/본문에 등장하면 원래 표기(raw)를 반환.
     검색 자체는 고객명(메인)으로만 수행하고, SUB고객명은 표시용으로만 사용합니다."""
@@ -205,7 +245,7 @@ def main():
         print(f"[{i}/{total}] 수집: {name} ('{query}')")
         items = fetch_company_news(query, client_id, client_secret, display=display)
 
-        kept, skipped_old, skipped_dup = 0, 0, 0
+        kept, skipped_old, skipped_dup, skipped_irrelevant = 0, 0, 0, 0
         for item in items:
             pub_dt = parse_pubdate(item.get("pubDate", ""))
             if pub_dt is None:
@@ -216,6 +256,11 @@ def main():
 
             title = clean_text(item.get("title", ""))
             description = clean_text(item.get("description", ""))
+
+            if not is_relevant_article(title, description, query):
+                skipped_irrelevant += 1
+                continue
+
             link = item.get("link", "")
             originallink = item.get("originallink", "") or link
             domain = get_domain(originallink) or get_domain(link)
@@ -259,7 +304,7 @@ def main():
             all_articles.append(article)
             kept += 1
 
-        print(f"       수집 {len(items)} / 채택 {kept} / 중복제외 {skipped_dup} / 기간외제외 {skipped_old}")
+        print(f"       수집 {len(items)} / 채택 {kept} / 중복제외 {skipped_dup} / 기간외제외 {skipped_old} / 나열형제외 {skipped_irrelevant}")
         time.sleep(request_delay)  # API 호출 간 짧은 대기
 
     # 우선순위 정렬: 먼저 최신순으로 정렬한 뒤, 태그 우선순위(투자>수주>협업>자동화>일반)로 안정 정렬
