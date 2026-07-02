@@ -25,6 +25,8 @@
     articleList: document.getElementById("articleList"),
     emptyState: document.getElementById("emptyState"),
     loadMoreBtn: document.getElementById("loadMoreBtn"),
+    resetFiltersBtn: document.getElementById("resetFiltersBtn"),
+    scrollTopBtn: document.getElementById("scrollTopBtn"),
   };
 
   function fmtUpdatedAt(iso) {
@@ -230,6 +232,33 @@
   el.loadMoreBtn.addEventListener("click", () => {
     state.visibleCount += PAGE_SIZE;
     render();
+  });
+
+  function resetFilters() {
+    state.selectedTag = "전체";
+    state.selectedTeam = "전체";
+    state.selectedCell = "전체";
+    state.selectedRep = "전체";
+    state.searchText = "";
+    state.majorOnly = false;
+    state.visibleCount = PAGE_SIZE;
+
+    el.searchInput.value = "";
+    el.majorOnly.checked = false;
+    buildTagChips();
+    buildSelectFilters();
+    render();
+  }
+
+  el.resetFiltersBtn.addEventListener("click", resetFilters);
+
+  const SCROLL_TOP_THRESHOLD = 500;
+  window.addEventListener("scroll", () => {
+    el.scrollTopBtn.hidden = window.scrollY <= SCROLL_TOP_THRESHOLD;
+  });
+
+  el.scrollTopBtn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
   fetch("data/news.json", { cache: "no-store" })
