@@ -31,7 +31,7 @@ jobs:
         env:
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
-          NEWS_LOOKBACK_DAYS: "7"
+          NEWS_LOOKBACK_DAYS: "20"
           NEWS_REQUEST_DELAY: "0.2"
         run: python scripts/fetch_news.py
 
