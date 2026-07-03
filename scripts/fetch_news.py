@@ -10,7 +10,10 @@
 4. 중복 기사 제거 (동일 링크 + 제목 유사도 기반 유사 기사)
 5. SUB고객명은 검색에 쓰지 않고, 기사 본문/제목에 등장할 때만 참고용으로 표시(matched_sub_names)
 6. 팀구분/셀코드/외근영업/내근영업 정보를 기사에 함께 저장해 웹사이트 필터(팀/셀/개인/고객명)에 활용
-7. data/news.json 으로 결과 저장 (GitHub Pages 정적 사이트에서 fetch 하여 사용)
+7. 고객명이 너무 짧거나 흔한 단어(예: '온')라서 오탐이 많이 나는 회사는
+   config/company_overrides.json 에 등록해 별칭(alias) 여러 개로 검색/매칭하고,
+   업종 키워드가 함께 있을 때만 채택하도록 강화할 수 있음
+8. data/news.json 으로 결과 저장 (GitHub Pages 정적 사이트에서 fetch 하여 사용)
 
 환경변수
 - NAVER_CLIENT_ID, NAVER_CLIENT_SECRET : 네이버 개발자센터에서 발급받은 값 (필수)
@@ -45,6 +48,18 @@ def load_json(filename):
     path = os.path.join(CONFIG_DIR, filename)
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def load_overrides():
+    """고객사별 검색 별칭/업종 키워드 예외 설정을 불러온다.
+    파일이 없으면 빈 딕셔너리를 반환한다 (필수 아님)."""
+    path = os.path.join(CONFIG_DIR, "company_overrides.json")
+    if not os.path.exists(path):
+        return {}
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    data.pop("_comment", None)
+    return data
 
 
 def clean_text(raw):
@@ -105,7 +120,7 @@ LIST_SEPARATORS = [",", "·", "、", "ㆍ", "/"]
 
 
 def is_relevant_article(title, description, query):
-    """검색어(고객명)가 기사에서 실질적으로 다뤄지는 기사인지 확인.
+    """검색어(고객명/별칭)가 기사에서 실질적으로 다뤄지는 기사인지 확인.
 
     네이버 뉴스 검색은 기사 원문 전체를 기준으로 검색어를 찾아 결과에 포함시키기 때문에,
     API가 돌려주는 제목/요약(description) 스니펫에는 정작 검색어가 전혀 등장하지 않는
@@ -143,6 +158,15 @@ def is_relevant_article(title, description, query):
     if separator_count >= 2:
         return False
     return True
+
+
+def has_context_keyword(text, keywords):
+    """업종 키워드가 함께 있어야만 채택하는 예외 회사용 체크.
+    keywords가 없으면(설정 안 함) 항상 통과시킨다."""
+    if not keywords:
+        return True
+    text_l = (text or "").lower()
+    return any(kw.lower() in text_l for kw in keywords)
 
 
 def find_matched_sub_names(title, description, sub_names):
@@ -228,6 +252,7 @@ def main():
     companies_cfg = load_json("companies.json")["companies"]
     media_cfg = load_json("major_media.json")
     keyword_cfg = load_json("priority_keywords.json")
+    overrides_cfg = load_overrides()
     priority_order = keyword_cfg.get("priority_order", [])
 
     cutoff = datetime.now(KST) - timedelta(days=lookback_days)
@@ -239,6 +264,7 @@ def main():
     for i, company in enumerate(companies_cfg, start=1):
         name = company["name"]
         query = company.get("query", name)
+        code = company.get("code", "")
         sub_names = company.get("sub_names", [])
         team = company.get("team", [])
         cell = company.get("cell", [])
@@ -246,8 +272,23 @@ def main():
         int_rep = company.get("int_rep", [])
         reps = sorted(set([r for r in (ext_rep + int_rep) if r]))
 
-        print(f"[{i}/{total}] 수집: {name} ('{query}')")
-        items = fetch_company_news(query, client_id, client_secret, display=display)
+        override = overrides_cfg.get(code)
+        if override and override.get("search_queries"):
+            search_queries = override["search_queries"]
+        else:
+            search_queries = [query]
+        context_keywords = override.get("context_keywords") if override else None
+
+        print(f"[{i}/{total}] 수집: {name} ({' / '.join(search_queries)})")
+
+        items_by_key = {}
+        for sq in search_queries:
+            for item in fetch_company_news(sq, client_id, client_secret, display=display):
+                key = item.get("link") or item.get("originallink") or item.get("title")
+                if key and key not in items_by_key:
+                    items_by_key[key] = item
+            time.sleep(request_delay)
+        items = list(items_by_key.values())
 
         kept, skipped_old, skipped_dup, skipped_irrelevant = 0, 0, 0, 0
         for item in items:
@@ -261,7 +302,11 @@ def main():
             title = clean_text(item.get("title", ""))
             description = clean_text(item.get("description", ""))
 
-            if not is_relevant_article(title, description, query):
+            if not any(is_relevant_article(title, description, sq) for sq in search_queries):
+                skipped_irrelevant += 1
+                continue
+
+            if context_keywords and not has_context_keyword(f"{title} {description}", context_keywords):
                 skipped_irrelevant += 1
                 continue
 
@@ -309,7 +354,6 @@ def main():
             kept += 1
 
         print(f"       수집 {len(items)} / 채택 {kept} / 중복제외 {skipped_dup} / 기간외제외 {skipped_old} / 나열형제외 {skipped_irrelevant}")
-        time.sleep(request_delay)  # API 호출 간 짧은 대기
 
     # 우선순위 정렬: 먼저 최신순으로 정렬한 뒤, 태그 우선순위(투자>수주>협업>자동화>일반)로 안정 정렬
     # (동일 우선순위 그룹 내에서는 최신 기사가 위로 오도록 stable sort 활용)
