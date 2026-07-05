@@ -2,9 +2,10 @@ name: Update Client News
 
 on:
   schedule:
-    # 매일 07:20 KST 경 (= 전날 22:20 UTC). 정각(0분)은 전 세계적으로 예약이 몰려
-    # GitHub가 지연시키거나 건너뛸 수 있어서, 일부러 애매한 분으로 설정합니다.
-    - cron: "20 22 * * *"
+    # 실험: 실제 Scheduled 실행이 관측된 한국시간 18:27경(= 09:27 UTC)으로 설정.
+    # 다만 이 시간에 맞춰 실행된다는 보장은 없고, GitHub 예약 큐 상황에 따라
+    # 그날그날 지연 정도가 달라질 수 있습니다 (실험적 조정).
+    - cron: "27 9 * * *"
   workflow_dispatch: {}
 
 permissions:
