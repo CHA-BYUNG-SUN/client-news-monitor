@@ -10,9 +10,11 @@
 4. 중복 기사 제거 (동일 링크 + 제목 유사도 기반 유사 기사)
 5. SUB고객명은 검색에 쓰지 않고, 기사 본문/제목에 등장할 때만 참고용으로 표시(matched_sub_names)
 6. 팀구분/셀코드/외근영업/내근영업 정보를 기사에 함께 저장해 웹사이트 필터(팀/셀/개인/고객명)에 활용
-7. 고객명이 너무 짧거나 흔한 단어(예: '온')라서 오탐이 많이 나는 회사는
-   config/company_overrides.json 에 등록해 별칭(alias) 여러 개로 검색/매칭하고,
-   업종 키워드가 함께 있을 때만 채택하도록 강화할 수 있음
+7. 고객명이 너무 짧거나 흔한 단어(예: '온', '메이저')라서 오탐이 많이 나는 회사는
+   config/company_overrides.json 에 등록해 다음처럼 강화할 수 있음:
+   - search_queries: 기본 정리된 이름 대신 더 구체적인 별칭 여러 개로 검색/매칭
+   - context_keywords: 이 키워드 중 하나가 함께 있어야만 채택 (업종 관련성 확인)
+   - exclude_keywords: 이 키워드 중 하나라도 있으면 무조건 제외 (엉뚱한 동음이의어 기사 배제)
 8. data/news.json 으로 결과 저장 (GitHub Pages 정적 사이트에서 fetch 하여 사용)
 
 환경변수
@@ -160,11 +162,11 @@ def is_relevant_article(title, description, query):
     return True
 
 
-def has_context_keyword(text, keywords):
-    """업종 키워드가 함께 있어야만 채택하는 예외 회사용 체크.
-    keywords가 없으면(설정 안 함) 항상 통과시킨다."""
+def contains_any_keyword(text, keywords):
+    """keywords 중 하나라도 text에 포함되어 있으면 True.
+    keywords가 없으면(설정 안 함) 항상 False를 반환한다 (검사 자체를 생략)."""
     if not keywords:
-        return True
+        return False
     text_l = (text or "").lower()
     return any(kw.lower() in text_l for kw in keywords)
 
@@ -278,6 +280,7 @@ def main():
         else:
             search_queries = [query]
         context_keywords = override.get("context_keywords") if override else None
+        exclude_keywords = override.get("exclude_keywords") if override else None
 
         print(f"[{i}/{total}] 수집: {name} ({' / '.join(search_queries)})")
 
@@ -301,12 +304,17 @@ def main():
 
             title = clean_text(item.get("title", ""))
             description = clean_text(item.get("description", ""))
+            combined_text = f"{title} {description}"
 
             if not any(is_relevant_article(title, description, sq) for sq in search_queries):
                 skipped_irrelevant += 1
                 continue
 
-            if context_keywords and not has_context_keyword(f"{title} {description}", context_keywords):
+            if context_keywords and not contains_any_keyword(combined_text, context_keywords):
+                skipped_irrelevant += 1
+                continue
+
+            if exclude_keywords and contains_any_keyword(combined_text, exclude_keywords):
                 skipped_irrelevant += 1
                 continue
 
