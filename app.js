@@ -1,3 +1,6 @@
+네, 전체 내용 드릴게요. GitHub에서 `app.js` 파일 열고 통째로 이걸로 교체·커밋하시면 됩니다.
+
+```javascript
 (function () {
   const PAGE_SIZE = 30;
 
@@ -45,15 +48,6 @@
     return [...new Set(values.filter((v) => v))].sort((a, b) => a.localeCompare(b, "ko"));
   }
 
-  // team/cell로 범위를 좁힌 기사 목록을 반환 (드롭다운 옵션 계산용)
-  function getScopedArticles({ team, cell } = {}) {
-    return state.articles.filter((a) => {
-      if (team && team !== "전체" && !(a.team || []).includes(team)) return false;
-      if (cell && cell !== "전체" && !(a.cell || []).includes(cell)) return false;
-      return true;
-    });
-  }
-
   function buildTagChips() {
     const tags = ["전체", ...state.tagOrder];
     el.tagFilters.innerHTML = "";
@@ -72,30 +66,23 @@
   }
 
   function fillSelect(selectEl, options, selectedValue) {
-    const nextValue = options.includes(selectedValue) ? selectedValue : "전체";
     selectEl.innerHTML = "";
     ["전체", ...options].forEach((opt) => {
       const o = document.createElement("option");
       o.value = opt;
       o.textContent = opt;
-      if (opt === nextValue) o.selected = true;
+      if (opt === selectedValue) o.selected = true;
       selectEl.appendChild(o);
     });
-    return nextValue;
   }
 
-  // 팀 → 셀 → 담당자 순으로 상위 선택에 맞는 항목만 남도록 옵션을 계산한다.
   function buildSelectFilters() {
     const teams = uniqueSorted(state.articles.flatMap((a) => a.team || []));
-    state.selectedTeam = fillSelect(el.teamSelect, teams, state.selectedTeam);
-
-    const teamScoped = getScopedArticles({ team: state.selectedTeam });
-    const cells = uniqueSorted(teamScoped.flatMap((a) => a.cell || []));
-    state.selectedCell = fillSelect(el.cellSelect, cells, state.selectedCell);
-
-    const cellScoped = getScopedArticles({ team: state.selectedTeam, cell: state.selectedCell });
-    const reps = uniqueSorted(cellScoped.flatMap((a) => a.reps || []));
-    state.selectedRep = fillSelect(el.repSelect, reps, state.selectedRep);
+    const cells = uniqueSorted(state.articles.flatMap((a) => a.cell || []));
+    const reps = uniqueSorted(state.articles.flatMap((a) => a.reps || []));
+    fillSelect(el.teamSelect, teams, state.selectedTeam);
+    fillSelect(el.cellSelect, cells, state.selectedCell);
+    fillSelect(el.repSelect, reps, state.selectedRep);
   }
 
   function matchesSearch(article, text) {
@@ -142,7 +129,6 @@
 
       const tagBadge = document.createElement("span");
       tagBadge.className = "tag-badge";
-      tagBadge.style.background = a.tag_color || "#7f8c8d";
       tagBadge.textContent = a.tag_label;
       top.appendChild(tagBadge);
 
@@ -218,20 +204,13 @@
 
   el.teamSelect.addEventListener("change", (e) => {
     state.selectedTeam = e.target.value;
-    // 팀이 바뀌면 셀/담당자는 새 팀 기준으로 다시 좁혀서 보여준다.
-    state.selectedCell = "전체";
-    state.selectedRep = "전체";
     state.visibleCount = PAGE_SIZE;
-    buildSelectFilters();
     render();
   });
 
   el.cellSelect.addEventListener("change", (e) => {
     state.selectedCell = e.target.value;
-    // 셀이 바뀌면 담당자는 새 셀 기준으로 다시 좁혀서 보여준다.
-    state.selectedRep = "전체";
     state.visibleCount = PAGE_SIZE;
-    buildSelectFilters();
     render();
   });
 
@@ -304,3 +283,4 @@
       el.updatedAt.textContent = "GitHub Actions가 아직 실행되지 않았을 수 있습니다.";
     });
 })();
+```
