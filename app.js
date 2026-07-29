@@ -1,6 +1,3 @@
-네, 전체 내용 드릴게요. GitHub에서 `app.js` 파일 열고 통째로 이걸로 교체·커밋하시면 됩니다.
-
-```javascript
 (function () {
   const PAGE_SIZE = 30;
 
@@ -283,4 +280,3 @@
       el.updatedAt.textContent = "GitHub Actions가 아직 실행되지 않았을 수 있습니다.";
     });
 })();
-```
