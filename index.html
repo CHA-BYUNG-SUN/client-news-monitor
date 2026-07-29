@@ -1,75 +1,171 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-<title>고객사 뉴스 모니터링</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="theme-color" content="#f2f6ff" />
+  <title>MISUMI 고객 방문 브리핑</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="topbar">
-    <h1>고객사 뉴스 모니터링</h1>
-    <p id="updatedAt" class="updated-at">업데이트 정보를 불러오는 중...</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand-row">
+        <a class="brand" href="#" aria-label="MISUMI 고객 방문 브리핑 홈">
+          <img src="assets/misumi-logo.svg" alt="MISUMI" class="brand-logo" />
+          <span class="brand-divider" aria-hidden="true"></span>
+          <span class="brand-name">고객 방문 브리핑</span>
+        </a>
+        <div id="updateStatus" class="update-status" aria-live="polite">
+          <span class="status-dot"></span>
+          <span id="updatedAt">업데이트 확인 중</span>
+        </div>
+      </div>
+
+      <div class="hero-copy">
+        <p class="eyebrow">BEFORE THE MEETING</p>
+        <h1>방문 전, 내 고객의<br class="mobile-only" /> 최신 이슈를 확인하세요.</h1>
+        <p>담당자 이름이나 고객사를 검색하면 지금 알아야 할 기사만 빠르게 모아드립니다.</p>
+      </div>
+
+      <div class="search-wrap">
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"></path>
+        </svg>
+        <label class="sr-only" for="searchInput">담당자 또는 고객사 검색</label>
+        <input type="search" id="searchInput" placeholder="담당자 이름 또는 고객사를 검색해 보세요" autocomplete="off" />
+        <button id="clearSearchBtn" class="clear-search" type="button" aria-label="검색어 지우기" hidden>×</button>
+      </div>
+    </div>
   </header>
 
-  <main class="container">
-    <section class="filter-section">
-      <div class="filter-group">
-        <label class="filter-title" for="searchInput">고객명 검색</label>
-        <input type="search" id="searchInput" class="search-input" placeholder="고객명 또는 관련명으로 검색" />
+  <main class="page-shell">
+    <section class="filter-toolbar" aria-label="뉴스 필터">
+      <div class="selected-filter-summary">
+        <span class="filter-summary-label">조회 기준</span>
+        <div id="activeFilterChips" class="active-filter-chips"></div>
+      </div>
+      <button id="openFiltersBtn" class="open-filters-btn" type="button">
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"></path>
+        </svg>
+        필터
+        <span id="activeFilterCount" class="filter-count" hidden>0</span>
+      </button>
+    </section>
+
+    <div id="filterOverlay" class="filter-overlay" hidden></div>
+    <aside id="filterPanel" class="filter-panel" aria-label="상세 필터" aria-hidden="true">
+      <div class="filter-panel-head">
+        <div>
+          <p class="panel-kicker">MY CUSTOMERS</p>
+          <h2>내 담당 고객 찾기</h2>
+        </div>
+        <button id="closeFiltersBtn" class="icon-button" type="button" aria-label="필터 닫기">×</button>
       </div>
 
-      <div class="filter-row">
-        <div class="filter-group filter-group--select">
-          <label class="filter-title" for="teamSelect">팀</label>
-          <select id="teamSelect" class="select-input"></select>
-        </div>
-        <div class="filter-group filter-group--select">
-          <label class="filter-title" for="cellSelect">셀</label>
-          <select id="cellSelect" class="select-input"></select>
-        </div>
-        <div class="filter-group filter-group--select">
-          <label class="filter-title" for="repSelect">개인(담당자)</label>
-          <select id="repSelect" class="select-input"></select>
-        </div>
+      <div class="filter-select-grid">
+        <label class="field-label" for="teamSelect">
+          <span>팀</span>
+          <select id="teamSelect"></select>
+        </label>
+        <label class="field-label" for="cellSelect">
+          <span>셀</span>
+          <select id="cellSelect"></select>
+        </label>
+        <label class="field-label" for="repSelect">
+          <span>영업 담당자</span>
+          <select id="repSelect"></select>
+        </label>
       </div>
 
-      <div class="filter-group">
-        <span class="filter-title">우선순위</span>
-        <div id="tagFilters" class="chip-row"></div>
+      <div class="filter-block">
+        <span class="field-title">이슈 유형</span>
+        <div id="tagFilters" class="tag-filter-list"></div>
       </div>
 
       <label class="major-toggle">
+        <span>
+          <strong>주요 언론사 우선</strong>
+          <small>메이저 언론사 기사만 모아봅니다.</small>
+        </span>
         <input type="checkbox" id="majorOnly" />
-        메이저 언론사만 보기
+        <i aria-hidden="true"></i>
       </label>
 
-      <div class="filter-actions">
-        <button id="resetFiltersBtn" class="reset-filters-btn" type="button">전체 필터 해제</button>
+      <div class="filter-panel-actions">
+        <button id="resetFiltersBtn" class="reset-button" type="button">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M4 4v6h6M20 20v-6h-6M5.5 15A7 7 0 0 0 18 17M18.5 9A7 7 0 0 0 6 7"></path>
+          </svg>
+          필터 해제
+        </button>
+        <button id="applyFiltersBtn" class="apply-button" type="button">결과 보기</button>
       </div>
-    </section>
+    </aside>
 
-    <section class="summary-bar" id="summaryBar"></section>
+    <div class="content-grid">
+      <aside class="customer-rail" aria-label="고객사 빠른 선택">
+        <div class="rail-heading">
+          <div>
+            <p>QUICK ACCESS</p>
+            <h2>담당 고객</h2>
+          </div>
+          <button id="clearCustomerBtn" type="button">전체</button>
+        </div>
+        <div id="customerList" class="customer-list"></div>
+      </aside>
 
-    <section id="articleList" class="article-list">
-      <p class="loading">뉴스를 불러오는 중입니다...</p>
-    </section>
+      <section class="issue-section" aria-labelledby="issueTitle">
+        <div class="issue-heading">
+          <div>
+            <p class="issue-kicker"><span>✦</span> MISUMI가 포착한</p>
+            <h2 id="issueTitle">내 고객의 실시간 이슈</h2>
+          </div>
+          <div class="result-summary">
+            <strong id="resultCount">0</strong>
+            <span>건의 최신 기사</span>
+          </div>
+        </div>
 
-    <div class="load-more-wrap">
-      <button id="loadMoreBtn" class="load-more-btn" hidden>더보기</button>
+        <div id="articleList" class="article-list" aria-live="polite">
+          <div class="loading-state">
+            <span></span><span></span><span></span>
+            <p>고객 이슈를 불러오는 중입니다.</p>
+          </div>
+        </div>
+
+        <div id="emptyState" class="empty-state" hidden>
+          <div class="empty-icon">⌕</div>
+          <h3>조건에 맞는 기사가 없습니다.</h3>
+          <p>고객명이나 담당자 이름을 줄여 검색하거나 필터를 해제해 보세요.</p>
+          <button id="emptyResetBtn" type="button">전체 필터 해제</button>
+        </div>
+
+        <div class="load-more-wrap">
+          <button id="loadMoreBtn" class="load-more-btn" type="button" hidden>
+            기사 더 보기
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"></path></svg>
+          </button>
+        </div>
+      </section>
     </div>
-
-    <p id="emptyState" class="empty-state" hidden>조건에 맞는 기사가 없습니다.</p>
   </main>
 
-  <footer class="footer">
-    <p>네이버 뉴스 검색 API 기반 · 매일 자동 갱신</p>
+  <footer class="site-footer">
+    <img src="assets/misumi-logo.svg" alt="MISUMI" />
+    <p>고객 방문 브리핑 · 네이버 뉴스 검색 API 기반 자동 갱신</p>
   </footer>
 
-  <button id="scrollTopBtn" class="scroll-top-btn" type="button" aria-label="맨 위로 이동" hidden>TOP</button>
+  <button id="scrollTopBtn" class="scroll-top-btn" type="button" aria-label="맨 위로 이동" hidden>
+    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 14 6-6 6 6"></path></svg>
+    <span>TOP</span>
+  </button>
 
   <script src="app.js"></script>
 </body>
