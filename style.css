@@ -109,7 +109,16 @@ body {
   white-space: nowrap;
 }
 
-.pv-status-block { text-align: right; min-width: 0; flex-shrink: 1; }
+.pv-status-block {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 2px 8px;
+  text-align: right;
+  min-width: 0;
+  flex-shrink: 1;
+}
 
 .pv-status {
   margin: 0;
@@ -134,7 +143,7 @@ body {
 .pv-status__dot.is-error { background: var(--danger); }
 
 .pv-counts {
-  margin: 2px 0 0;
+  margin: 0;
   font-size: 10px;
   color: var(--text-tertiary);
   white-space: nowrap;
@@ -560,7 +569,6 @@ body {
 
 .pv-secondary-panel__handle,
 .pv-secondary-panel__header,
-.pv-secondary-panel__footer,
 .pv-sheet-close {
   display: none;
 }
@@ -618,22 +626,19 @@ body {
 }
 .pv-major-toggle input { width: 18px; height: 18px; }
 
-.pv-secondary-panel__footer {
-  display: flex;
-  gap: 10px;
-  padding: 14px 18px;
-  border-top: 1px solid var(--border-soft);
-}
-.pv-btn {
-  flex: 1;
-  height: 46px;
-  border-radius: var(--radius-control);
-  font-size: 14px;
+.pv-panel-reset-link {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--link);
+  font-size: 13px;
   font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: pointer;
+  padding: 6px 4px;
 }
-.pv-btn--ghost { border: 1px solid var(--border); background: var(--surface); color: var(--text-primary); }
-.pv-btn--primary { border: none; background: var(--misumi-deep-blue); color: #fff; }
+.pv-panel-reset-link:disabled { color: var(--text-tertiary); cursor: default; }
 
 /* 태블릿 세로 (768~1023px) */
 @media (min-width: 768px) {
