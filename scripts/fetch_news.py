@@ -271,8 +271,9 @@ def main():
         team = company.get("team", [])
         cell = company.get("cell", [])
         ext_rep = company.get("ext_rep", [])
-        int_rep = company.get("int_rep", [])
-        reps = sorted(set([r for r in (ext_rep + int_rep) if r]))
+        # 영업담당(reps) 표시/필터는 외근영업만 사용한다.
+        # 내근영업까지 합치면 같은 고객의 기사가 영업명 필터상 여러 이름으로 흩어져 보이는 문제가 있어 제외한다.
+        reps = sorted(set([r for r in ext_rep if r]))
 
         override = overrides_cfg.get(code)
         if override and override.get("search_queries"):
