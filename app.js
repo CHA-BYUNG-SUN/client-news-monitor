@@ -55,7 +55,6 @@
     panel: document.getElementById("pvSecondaryPanel"),
     backdrop: document.getElementById("pvSheetBackdrop"),
     sheetCloseBtn: document.getElementById("pvSheetCloseBtn"),
-    sheetApplyBtn: document.getElementById("pvSheetApplyBtn"),
     sheetResetBtn: document.getElementById("pvSheetResetBtn"),
   };
 
@@ -711,11 +710,6 @@
   el.openSheetBtn.addEventListener("click", openSheet);
   el.sheetCloseBtn.addEventListener("click", closeSheet);
   el.backdrop.addEventListener("click", closeSheet);
-  el.sheetApplyBtn.addEventListener("click", function () {
-    state.visibleCount = PAGE_SIZE;
-    applyFiltersAndRender();
-    closeSheet();
-  });
   el.majorOnlyCheckbox.addEventListener("change", function (e) {
     state.majorOnly = e.target.checked;
     state.visibleCount = PAGE_SIZE;
