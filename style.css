@@ -45,7 +45,7 @@ body {
   color: var(--text-primary);
   font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
-  padding-bottom: 96px;
+  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
 }
 
 .sr-only {
@@ -80,7 +80,8 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 6px 12px;
   margin-bottom: 12px;
 }
 
@@ -108,16 +109,18 @@ body {
   white-space: nowrap;
 }
 
-.pv-status-block { text-align: right; flex-shrink: 0; }
+.pv-status-block { text-align: right; min-width: 0; flex-shrink: 1; }
 
 .pv-status {
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
-  font-size: 12px;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 10px;
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .pv-status__dot {
@@ -132,8 +135,9 @@ body {
 
 .pv-counts {
   margin: 2px 0 0;
-  font-size: 12px;
+  font-size: 10px;
   color: var(--text-tertiary);
+  white-space: nowrap;
 }
 
 /* 검색 */
@@ -485,14 +489,9 @@ body {
 }
 .pv-recent-item__label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* 하단 필터 바 (모바일) */
+/* 하단 필터 바: 이슈유형·메이저 패널을 항상 인라인으로 보이게 바꾸면서 더 이상 쓰지 않음 */
 .pv-bottom-bar {
-  position: fixed;
-  left: 0; right: 0; bottom: 0;
-  padding: 10px 16px calc(10px + var(--safe-bottom));
-  background: var(--surface);
-  border-top: 1px solid var(--border-soft);
-  z-index: 40;
+  display: none;
 }
 .pv-bottom-filter-btn {
   width: 100%;
@@ -526,7 +525,7 @@ body {
 .pv-top-btn {
   position: fixed;
   right: 16px;
-  bottom: calc(78px + var(--safe-bottom));
+  bottom: calc(16px + var(--safe-bottom));
   width: 48px; height: 48px;
   border-radius: 50%;
   border: 1px solid var(--border);
@@ -540,70 +539,67 @@ body {
   cursor: pointer;
   z-index: 41;
   box-shadow: 0 4px 12px rgba(20, 33, 61, 0.1);
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 .pv-top-btn__arrow { width: 15px; height: 15px; }
 .pv-top-btn__label { font-size: 10px; line-height: 1; }
 
-/* 이슈유형/메이저 패널 (모바일: 바텀시트 / 태블릿·노트북: 인라인 패널) */
+/* 이슈유형/메이저 패널: 항상 화면에 보이는 한 줄짜리 인라인 패널 (모바일 포함, 열고 닫을 필요 없음) */
 .pv-sheet-backdrop {
-  position: fixed; inset: 0;
-  background: rgba(20, 33, 61, 0.35);
-  z-index: 50;
+  display: none !important;
 }
 
 .pv-secondary-panel {
-  position: fixed;
-  left: 0; right: 0; bottom: 0;
+  position: static;
   background: var(--surface);
-  border-radius: 20px 20px 0 0;
-  z-index: 51;
-  transform: translateY(100%);
-  transition: transform 220ms ease;
-  max-height: 82vh;
-  overflow-y: auto;
-  padding-bottom: var(--safe-bottom);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  margin-bottom: 14px;
 }
-.pv-secondary-panel.is-open { transform: translateY(0); }
 
-.pv-secondary-panel__handle {
-  width: 40px; height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  margin: 10px auto;
-}
-.pv-secondary-panel__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 18px 10px;
-  font-size: 14px;
-  font-weight: 500;
-  border-bottom: 1px solid var(--border-soft);
-}
+.pv-secondary-panel__handle,
+.pv-secondary-panel__header,
+.pv-secondary-panel__footer,
 .pv-sheet-close {
-  border: none; background: none;
-  font-size: 16px; color: var(--text-secondary);
-  cursor: pointer;
-  width: 32px; height: 32px;
+  display: none;
 }
-.pv-secondary-panel__body { padding: 16px 18px; }
-.pv-sheet-group { margin-bottom: 16px; }
-.pv-sheet-label {
-  display: block;
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
+
+.pv-secondary-panel__body {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 12px;
 }
-.pv-chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.pv-sheet-group {
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.pv-sheet-label { display: none; }
+.pv-chip-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pv-chip-row::-webkit-scrollbar { display: none; }
 .pv-chip {
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 18px;
+  height: 32px;
+  padding: 0 13px;
+  border-radius: 16px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text-secondary);
   font-size: 13px;
   font-family: inherit;
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: pointer;
 }
 .pv-chip.is-active {
@@ -614,9 +610,11 @@ body {
 .pv-major-toggle {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
+  gap: 6px;
+  font-size: 13px;
   color: var(--text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .pv-major-toggle input { width: 18px; height: 18px; }
 
@@ -642,6 +640,8 @@ body {
   .pv-app { padding: 0 24px; }
   .pv-title { font-size: 28px; }
   .pv-search-input { height: 48px; font-size: 15px; }
+  .pv-status { font-size: 12px; }
+  .pv-counts { font-size: 12px; }
 
   /* 이슈 유형·메이저 언론사 필터가 기사 목록 아래로 밀려 안 보이는 문제 방지:
      헤더 전체를 화면 상단에 고정해 스크롤해도 항상 보이게 한다 */
@@ -652,26 +652,6 @@ body {
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-soft);
   }
-
-  .pv-bottom-bar { display: none; }
-
-  .pv-secondary-panel {
-    position: static;
-    transform: none;
-    border-radius: 14px;
-    border: 1px solid var(--border-soft);
-    margin-bottom: 14px;
-    max-height: none;
-    overflow: visible;
-  }
-  .pv-secondary-panel__handle,
-  .pv-secondary-panel__footer,
-  .pv-sheet-close { display: none; }
-  .pv-sheet-backdrop { display: none !important; }
-  .pv-secondary-panel__header { border-bottom: none; padding: 14px 16px 0; }
-  .pv-secondary-panel__body { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; padding: 10px 16px 16px; }
-  .pv-sheet-group { margin-bottom: 0; display: flex; align-items: center; gap: 10px; }
-  .pv-sheet-label { margin-bottom: 0; }
 
   .pv-top-btn { bottom: 24px; }
 }
