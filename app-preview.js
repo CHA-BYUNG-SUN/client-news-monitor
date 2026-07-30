@@ -422,6 +422,7 @@
     state.prevIds = currentIds;
     el.loadMoreBtn.hidden = filtered.length <= visible.length;
     el.loadMoreBtn.disabled = false;
+    if (typeof syncHeaderHeight === "function") setTimeout(syncHeaderHeight, 0);
   }
 
   function updateResetState() {
@@ -772,6 +773,21 @@
         console.error(err);
       });
   }
+
+  // ---------- 헤더 실제 높이를 CSS 변수로 반영 (태블릿/노트북에서 좌측 패널이 고정 헤더 밑에 오도록) ----------
+  var headerEl = document.querySelector(".pv-header");
+  function syncHeaderHeight() {
+    try {
+      if (!headerEl || !document.documentElement || !document.documentElement.style.setProperty) return;
+      document.documentElement.style.setProperty("--header-h", headerEl.offsetHeight + "px");
+    } catch (e) { /* 구형 브라우저 등에서 실패해도 레이아웃 자체는 정상 동작 */ }
+  }
+  syncHeaderHeight();
+  window.addEventListener("resize", function () {
+    clearTimeout(syncHeaderHeight._t);
+    syncHeaderHeight._t = setTimeout(syncHeaderHeight, 150);
+  });
+  window.addEventListener("load", syncHeaderHeight);
 
   loadData();
 })();
