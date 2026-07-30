@@ -65,6 +65,14 @@
     });
   }
 
+  // 아이콘 배지에 "(주", "(사" 같은 법인 표기 조각만 남는 것을 방지하기 위해
+  // 앞의 법인 표기를 제거한 뒤 앞 두 글자를 사용한다.
+  function iconInitials(name) {
+    var cleaned = (name || "").replace(/^(\(주\)|㈜|\(사\)|\(유\)|\(재\)|\(합\))\s*/, "");
+    cleaned = cleaned.trim() || (name || "");
+    return cleaned.slice(0, 2);
+  }
+
   function pad2(n) { return String(n).length < 2 ? "0" + n : String(n); }
 
   // 브라우저마다 Intl 로케일 포맷(오전/오후, 구두점 위치 등)이 미묘하게 달라질 수 있어
@@ -472,7 +480,7 @@
       recentHeader.textContent = "최근 검색";
       el.recentList.appendChild(recentHeader);
       recents.forEach(function (text) {
-        el.recentList.appendChild(buildRecentItem(text, text.slice(0, 2)));
+        el.recentList.appendChild(buildRecentItem(text, iconInitials(text)));
       });
     }
 
@@ -483,7 +491,7 @@
       companyHeader.textContent = "담당 고객";
       el.recentList.appendChild(companyHeader);
       companies.forEach(function (name) {
-        el.recentList.appendChild(buildRecentItem(name, name.slice(0, 2)));
+        el.recentList.appendChild(buildRecentItem(name, iconInitials(name)));
       });
     }
   }
