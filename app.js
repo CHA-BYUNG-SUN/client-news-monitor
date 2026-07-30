@@ -718,7 +718,9 @@
   });
   el.majorOnlyCheckbox.addEventListener("change", function (e) {
     state.majorOnly = e.target.checked;
+    state.visibleCount = PAGE_SIZE;
     updateFilterBadge();
+    applyFiltersAndRender();
   });
 
   // ---------- TOP 버튼 ----------
