@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+<title>고객 방문 브리핑 (미리보기) · MISUMI</title>
+<meta name="robots" content="noindex" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/BMDOHYEON/BMDOHYEON.css" />
+<link rel="stylesheet" href="style-preview.css" />
+</head>
+<body>
+<p class="pv-preview-flag">미리보기 화면입니다 · 운영 사이트는 변경되지 않았습니다</p>
+
+<div class="pv-app">
+
+  <header class="pv-header">
+    <div class="pv-header__top">
+      <div class="pv-brand">
+        <img src="assets/logo/misumi-logo-official-transparent.png" alt="MISUMI 로고" class="pv-logo" />
+        <h1 class="pv-title">고객 방문 브리핑</h1>
+      </div>
+      <div class="pv-status-block">
+        <p class="pv-status" id="pvStatus" role="status" aria-live="polite">
+          <span class="pv-status__dot" id="pvStatusDot"></span>
+          <span id="pvStatusText">업데이트 정보 확인 중…</span>
+        </p>
+        <p class="pv-counts" id="pvCounts"></p>
+      </div>
+    </div>
+
+    <div class="pv-search-wrap">
+      <svg class="pv-search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input type="search" id="pvSearchInput" class="pv-search-input" placeholder="담당자 또는 고객사를 검색하세요" autocomplete="off" aria-label="담당자 또는 고객사 검색" />
+      <div id="pvAutocomplete" class="pv-autocomplete" hidden role="listbox"></div>
+    </div>
+
+    <div class="pv-filter-row" id="pvFilterRow">
+      <label class="sr-only" for="pvTeamSelect">팀</label>
+      <select id="pvTeamSelect" class="pv-chip-select"></select>
+      <label class="sr-only" for="pvCellSelect">셀</label>
+      <select id="pvCellSelect" class="pv-chip-select"></select>
+      <label class="sr-only" for="pvRepSelect">영업명</label>
+      <select id="pvRepSelect" class="pv-chip-select"></select>
+      <button type="button" id="pvResetBtn" class="pv-reset-link">필터 전체 해제</button>
+    </div>
+  </header>
+
+  <main class="pv-main">
+    <aside class="pv-side" id="pvSide" aria-label="담당 고객 및 최근 검색">
+      <h2 class="pv-side__title">담당 고객 / 최근 검색</h2>
+      <div id="pvRecentList" class="pv-recent-list"></div>
+    </aside>
+
+    <section class="pv-feed">
+      <h2 class="pv-feed__title" id="pvFeedTitle">고객 실시간 이슈</h2>
+      <div id="pvArticleList" class="pv-article-list" aria-live="polite"></div>
+      <p id="pvEmptyState" class="pv-empty" hidden></p>
+      <p id="pvErrorState" class="pv-error" hidden></p>
+      <div class="pv-load-more-wrap">
+        <button type="button" id="pvLoadMoreBtn" class="pv-load-more-btn" hidden>더보기</button>
+      </div>
+    </section>
+  </main>
+
+</div>
+
+<div class="pv-secondary-panel" id="pvSecondaryPanel">
+  <div class="pv-secondary-panel__handle" id="pvSheetHandle" aria-hidden="true"></div>
+  <div class="pv-secondary-panel__header">
+    <span>이슈 유형 · 메이저 언론사</span>
+    <button type="button" id="pvSheetCloseBtn" class="pv-sheet-close" aria-label="닫기">✕</button>
+  </div>
+  <div class="pv-secondary-panel__body">
+    <div class="pv-sheet-group">
+      <span class="pv-sheet-label">이슈 유형</span>
+      <div id="pvTagChips" class="pv-chip-row"></div>
+    </div>
+    <label class="pv-major-toggle">
+      <input type="checkbox" id="pvMajorOnly" /> 메이저 언론사만 보기
+    </label>
+  </div>
+  <div class="pv-secondary-panel__footer">
+    <button type="button" id="pvSheetResetBtn" class="pv-btn pv-btn--ghost">필터 전체 해제</button>
+    <button type="button" id="pvSheetApplyBtn" class="pv-btn pv-btn--primary">적용</button>
+  </div>
+</div>
+<div class="pv-sheet-backdrop" id="pvSheetBackdrop" hidden></div>
+
+<div class="pv-bottom-bar" id="pvBottomBar">
+  <button type="button" id="pvOpenSheetBtn" class="pv-bottom-filter-btn">
+    필터 <span id="pvFilterCountBadge" class="pv-badge" hidden>0</span>
+  </button>
+</div>
+
+<button type="button" id="pvTopBtn" class="pv-top-btn" aria-label="맨 위로 이동" hidden>
+  <svg viewBox="0 0 24 24" aria-hidden="true" class="pv-top-btn__arrow"><path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <span class="pv-top-btn__label">TOP</span>
+</button>
+
+<script src="app-preview.js"></script>
+</body>
+</html>
