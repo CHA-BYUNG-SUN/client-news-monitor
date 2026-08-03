@@ -14,8 +14,10 @@
    config/company_overrides.json 에 등록해 다음처럼 강화할 수 있음:
    - search_queries: 기본 정리된 이름 대신 더 구체적인 별칭 여러 개로 검색/매칭
    - context_keywords: 이 키워드 중 하나가 함께 있어야만 채택 (업종 관련성 확인)
-   - exclude_keywords: 이 키워드 중 하나라도 있으면 무조건 제외 (엉뚱한 동음이의어 기사 배제)
-8. data/news.json 으로 결과 저장 (GitHub Pages 정적 사이트에서 fetch 하여 사용)
+   - exclude_keywords: 이 키워드 중 하나라도 있으면 무조건 제외 (엉뚱한 동음이의어 기사 배제, 회사별)
+8. config/global_exclude_keywords.json 에 등록된 키워드가 제목/본문에 하나라도 있으면
+   고객사와 상관없이 전체 공통으로 기사를 제외함 (예: 주가/증시 등 증권사 리포트성 노이즈 기사)
+9. data/news.json 으로 결과 저장 (GitHub Pages 정적 사이트에서 fetch 하여 사용)
 
 환경변수
 - NAVER_CLIENT_ID, NAVER_CLIENT_SECRET : 네이버 개발자센터에서 발급받은 값 (필수)
@@ -62,6 +64,18 @@ def load_overrides():
         data = json.load(f)
     data.pop("_comment", None)
     return data
+
+
+def load_global_exclude_keywords():
+    """모든 고객사에 공통으로 적용되는 제외 키워드를 불러온다.
+    (예: 증시/주가 관련 증권사 리포트성 노이즈 기사 필터링)
+    파일이 없으면 빈 리스트를 반환한다 (필수 아님)."""
+    path = os.path.join(CONFIG_DIR, "global_exclude_keywords.json")
+    if not os.path.exists(path):
+        return []
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return data.get("keywords", [])
 
 
 def clean_text(raw):
@@ -255,6 +269,7 @@ def main():
     media_cfg = load_json("major_media.json")
     keyword_cfg = load_json("priority_keywords.json")
     overrides_cfg = load_overrides()
+    global_exclude_keywords = load_global_exclude_keywords()
     priority_order = keyword_cfg.get("priority_order", [])
 
     cutoff = datetime.now(KST) - timedelta(days=lookback_days)
@@ -294,7 +309,7 @@ def main():
             time.sleep(request_delay)
         items = list(items_by_key.values())
 
-        kept, skipped_old, skipped_dup, skipped_irrelevant = 0, 0, 0, 0
+        kept, skipped_old, skipped_dup, skipped_irrelevant, skipped_stock = 0, 0, 0, 0, 0
         for item in items:
             pub_dt = parse_pubdate(item.get("pubDate", ""))
             if pub_dt is None:
@@ -317,6 +332,10 @@ def main():
 
             if exclude_keywords and contains_any_keyword(combined_text, exclude_keywords):
                 skipped_irrelevant += 1
+                continue
+
+            if contains_any_keyword(combined_text, global_exclude_keywords):
+                skipped_stock += 1
                 continue
 
             link = item.get("link", "")
@@ -362,7 +381,7 @@ def main():
             all_articles.append(article)
             kept += 1
 
-        print(f"       수집 {len(items)} / 채택 {kept} / 중복제외 {skipped_dup} / 기간외제외 {skipped_old} / 나열형제외 {skipped_irrelevant}")
+        print(f"       수집 {len(items)} / 채택 {kept} / 중복제외 {skipped_dup} / 기간외제외 {skipped_old} / 나열형제외 {skipped_irrelevant} / 증시노이즈제외 {skipped_stock}")
 
     # 우선순위 정렬: 먼저 최신순으로 정렬한 뒤, 태그 우선순위(투자>수주>협업>자동화>일반)로 안정 정렬
     # (동일 우선순위 그룹 내에서는 최신 기사가 위로 오도록 stable sort 활용)
