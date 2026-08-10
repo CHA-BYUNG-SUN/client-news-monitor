@@ -27,7 +27,7 @@
 - ANTHROPIC_API_KEY : Anthropic Claude API 키 (선택). 설정하면 고객사별 "최근 N일 AI 요약"을
   함께 생성해 data/news.json 의 company_summaries 필드에 저장한다. 설정하지 않으면 이 단계는
   건너뛰고(company_summaries 필드 자체가 생성되지 않음) 기존처럼 기사 목록만 저장한다.
-- SUMMARY_LOOKBACK_DAYS : AI 요약에 포함할 기사 기간(일 단위, 기본 5일)
+- SUMMARY_LOOKBACK_DAYS : AI 요약에 포함할 기사 기간(일 단위, 기본 20일)
 - SUMMARY_MAX_ARTICLES : 고객사 1건 요약 생성 시 참고할 최대 기사 수(기본 5건)
 - SUMMARY_REQUEST_DELAY : 고객사별 Claude API 호출 간 대기 시간(초, 기본 0.3)
 """
@@ -304,8 +304,9 @@ def build_summary_prompt(company_name, articles):
         f"다음은 '{company_name}'과 관련된 것으로 자동 수집된 최근 기사 목록입니다. "
         "다만 이 기사들은 고객명을 키워드로 검색해서 모은 것이라, 이름이 우연히 겹쳤을 뿐 실제로는 "
         f"이 고객사와 무관하거나 다른 회사/산업 위주로 다뤄진 기사가 섞여 있을 수 있습니다. "
-        f"먼저 이 기사들 중 '{company_name}'의 실제 사업 활동(수주, 투자, 협업, 설비/자동화 도입, 신규 계약 등)과 "
-        "직접 관련된 기사만 골라내고, 이름만 겹쳤거나 다른 회사·산업이 중심인 기사는 무시하세요. "
+        f"먼저 이 기사들 중 '{company_name}'의 실제 사업 활동(수주, 투자, 협업, 설비/자동화 도입, 신규 계약, "
+        "공시, 인수합병(M&A), 투자 유치 등)과 직접 관련된 기사만 골라내고, "
+        "이름만 겹쳤거나 다른 회사·산업이 중심인 기사는 무시하세요. "
         "그렇게 골라낸 기사만으로 한국어 2~3문장의 짧은 요약을 작성해 주세요. "
         "영업사원이 이 고객사를 방문하기 전에 빠르게 훑어볼 수 있는 요약이어야 합니다. "
         "직접 관련된 기사가 하나도 없다면 다른 말 없이 '최근 이 고객사와 직접 관련된 뚜렷한 소식은 없습니다.'라고만 답하세요. "
@@ -315,7 +316,7 @@ def build_summary_prompt(company_name, articles):
     )
 
 
-def generate_company_summaries(all_articles, api_key, lookback_days=5, max_articles=5, request_delay=0.3):
+def generate_company_summaries(all_articles, api_key, lookback_days=20, max_articles=5, request_delay=0.3):
     """최근 lookback_days일 이내 기사가 있는 고객사만 골라 Claude Haiku로 2~3문장 요약을 생성한다.
     all_articles는 이미 '우선순위 태그 -> 최신순'으로 정렬돼 있으므로, 고객사별로 그 순서 그대로
     상위 max_articles건만 골라 요약 재료로 쓴다.
@@ -369,7 +370,7 @@ def main():
     request_delay = float(os.environ.get("NEWS_REQUEST_DELAY", "0.2"))
 
     anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY")
-    summary_lookback_days = int(os.environ.get("SUMMARY_LOOKBACK_DAYS", "5"))
+    summary_lookback_days = int(os.environ.get("SUMMARY_LOOKBACK_DAYS", "20"))
     summary_max_articles = int(os.environ.get("SUMMARY_MAX_ARTICLES", "5"))
     summary_request_delay = float(os.environ.get("SUMMARY_REQUEST_DELAY", "0.3"))
 
