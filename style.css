@@ -626,6 +626,77 @@ body {
   color: var(--text-tertiary);
 }
 
+/* 고객사 핵심 기사 AI 요약 (최근 N일 기준) */
+.pv-company-modal__summary-box {
+  margin: 4px 4px 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--issue-bg-start), var(--issue-bg-end));
+  border: 1px solid var(--border-soft);
+}
+
+.pv-company-modal__summary-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: var(--misumi-deep-blue);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.pv-company-modal__summary-text {
+  margin: 0 0 8px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.pv-company-modal__summary-meta {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.pv-company-modal__refs-title {
+  margin: 4px 8px 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.pv-company-modal__refs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pv-company-modal__ref-item {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 8px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+.pv-company-modal__ref-item:hover { background: var(--chip-bg); }
+
+.pv-company-modal__ref-item-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pv-company-modal__ref-item:hover .pv-company-modal__ref-item-title { color: var(--misumi-deep-blue); text-decoration: underline; }
+
+.pv-company-modal__ref-item-meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+
 .pv-company-modal__footer {
   padding: 12px 16px;
   border-top: 1px solid var(--border-soft);
