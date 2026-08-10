@@ -16,6 +16,8 @@
     generatedAt: null,
     lookbackDays: null,
     totalArticles: 0,
+    companySummaries: null,
+    summaryLookbackDays: null,
     selectedTeam: "전체",
     selectedCell: "전체",
     selectedRep: "전체",
@@ -511,15 +513,83 @@
     el.companyModal.hidden = true;
   }
 
+  function articleAgeDays(a) {
+    if (!a.pubDate_iso) return Infinity;
+    var ms = Date.now() - new Date(a.pubDate_iso).getTime();
+    if (isNaN(ms)) return Infinity;
+    return ms / 86400000;
+  }
+
   function renderCompanyModal(companyName, articles) {
     el.companyModalTitle.textContent = companyName;
+    el.companyModalBody.innerHTML = "";
 
     var first = articles[0];
-    var metaParts = first ? [].concat(first.team || [], first.cell || [], first.reps || []).filter(Boolean) : [];
-    metaParts.push("기사 " + articles.length.toLocaleString("ko-KR") + "건");
-    el.companyModalMeta.textContent = metaParts.join(" · ");
+    var baseMetaParts = first ? [].concat(first.team || [], first.cell || [], first.reps || []).filter(Boolean) : [];
 
-    el.companyModalBody.innerHTML = "";
+    // company_summaries가 news.json에 아예 없으면(구버전 데이터 / 이번 회차에 AI 요약을 안 돌린 날)
+    // 예전처럼 기사 카드 목록을 그대로 보여준다(항상 동작하는 기본 방식으로 자동 전환).
+    if (!state.companySummaries) {
+      renderCompanyModalLegacyList(articles, baseMetaParts);
+      return;
+    }
+
+    var entry = state.companySummaries[companyName];
+    var days = state.summaryLookbackDays || 5;
+
+    if (!entry) {
+      // AI 요약 기능은 켜져 있지만, 이 고객사는 최근 N일 이내 새 기사가 없었던 경우.
+      el.companyModalMeta.textContent = baseMetaParts.concat("최근 " + days + "일 새 소식 없음").join(" · ");
+      var empty = document.createElement("p");
+      empty.className = "pv-company-modal__empty";
+      empty.textContent = "최근 " + days + "일간 새로 수집된 기사가 없습니다. 아래 \"전체 보기\"에서 이전 기사를 확인하실 수 있습니다.";
+      el.companyModalBody.appendChild(empty);
+      el.companyModalViewAllBtn.hidden = articles.length === 0;
+      return;
+    }
+
+    el.companyModalMeta.textContent = baseMetaParts.concat(
+      "최근 " + days + "일 기사 " + entry.based_on.toLocaleString("ko-KR") + "건 기준 요약"
+    ).join(" · ");
+
+    var summaryBox = document.createElement("div");
+    summaryBox.className = "pv-company-modal__summary-box";
+    var badge = document.createElement("span");
+    badge.className = "pv-company-modal__summary-badge";
+    badge.textContent = "AI 요약";
+    var summaryText = document.createElement("p");
+    summaryText.className = "pv-company-modal__summary-text";
+    summaryText.textContent = entry.summary;
+    var summaryMeta = document.createElement("p");
+    summaryMeta.className = "pv-company-modal__summary-meta";
+    summaryMeta.textContent = "생성: " + fmtDateTime(entry.generated_at, true);
+    summaryBox.appendChild(badge);
+    summaryBox.appendChild(summaryText);
+    summaryBox.appendChild(summaryMeta);
+    el.companyModalBody.appendChild(summaryBox);
+
+    // 요약의 근거가 된 최근 N일 기사를 원문으로 바로 확인할 수 있도록 제목만 간단히 링크로 나열한다.
+    var recentRefs = articles.filter(function (a) { return articleAgeDays(a) <= days; }).slice(0, entry.based_on);
+    if (recentRefs.length) {
+      var refsTitle = document.createElement("p");
+      refsTitle.className = "pv-company-modal__refs-title";
+      refsTitle.textContent = "참고 기사";
+      el.companyModalBody.appendChild(refsTitle);
+      var refsWrap = document.createElement("div");
+      refsWrap.className = "pv-company-modal__refs";
+      recentRefs.forEach(function (a) {
+        refsWrap.appendChild(buildCompanyModalRefItem(a));
+      });
+      el.companyModalBody.appendChild(refsWrap);
+    }
+
+    el.companyModalViewAllBtn.hidden = false;
+  }
+
+  // AI 요약 데이터 자체가 없는(구버전) news.json을 만났을 때만 쓰는 예전 방식 렌더러.
+  function renderCompanyModalLegacyList(articles, baseMetaParts) {
+    var metaParts = baseMetaParts.concat("기사 " + articles.length.toLocaleString("ko-KR") + "건");
+    el.companyModalMeta.textContent = metaParts.join(" · ");
 
     if (!articles.length) {
       var empty = document.createElement("p");
@@ -530,8 +600,6 @@
       return;
     }
 
-    // articles는 news.json 생성 시 이미 "이슈유형 우선순위 → 최신순"으로 정렬되어 있으므로
-    // 그 순서 그대로 앞에서부터 N건만 보여주면 핵심 기사 요약이 된다.
     var shown = articles.slice(0, COMPANY_MODAL_LIMIT);
     shown.forEach(function (a) {
       el.companyModalBody.appendChild(buildCompanyModalItem(a));
@@ -545,6 +613,26 @@
     }
 
     el.companyModalViewAllBtn.hidden = false;
+  }
+
+  function buildCompanyModalRefItem(a) {
+    var href = a.originallink || a.link || "";
+    var item = document.createElement(href ? "a" : "div");
+    item.className = "pv-company-modal__ref-item";
+    if (href) {
+      item.href = href;
+      item.target = "_blank";
+      item.rel = "noopener noreferrer";
+    }
+    var title = document.createElement("span");
+    title.className = "pv-company-modal__ref-item-title";
+    title.textContent = a.title || "";
+    var meta = document.createElement("span");
+    meta.className = "pv-company-modal__ref-item-meta";
+    meta.textContent = (a.press || "") + (a.pubDate_display ? " · " + a.pubDate_display : "");
+    item.appendChild(title);
+    item.appendChild(meta);
+    return item;
   }
 
   function buildCompanyModalItem(a) {
@@ -858,6 +946,11 @@
         state.generatedAt = data.generated_at || null;
         state.lookbackDays = data.lookback_days || null;
         state.totalArticles = data.total_articles || state.articles.length;
+        // company_summaries가 아예 없으면(구버전 데이터거나 AI 요약 기능이 꺼진 날) null로 두어
+        // 팝업이 기존 방식(기사 목록)으로 자동 전환되도록 한다. 빈 객체({})는 "기능은 켜져 있지만
+        // 이 고객사는 최근 기사가 없다"는 뜻이므로 null과 구분해야 한다.
+        state.companySummaries = data.company_summaries || null;
+        state.summaryLookbackDays = data.summary_lookback_days || null;
         state.loadError = null;
 
         buildFilterOptions();
