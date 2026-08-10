@@ -3,8 +3,7 @@
 
   var PAGE_SIZE = 30;
   var SCROLL_TOP_THRESHOLD = 500;
-  var RECENT_SEARCH_KEY = "pv_recent_searches";
-  var RECENT_SEARCH_MAX = 6;
+  var COMPANY_MODAL_LIMIT = 6;
   var FRESH_HOURS = 24;
   var STALE_WARN_HOURS = 24;
   var STALE_DANGER_HOURS = 48;
@@ -45,7 +44,8 @@
     errorState: document.getElementById("pvErrorState"),
     loadMoreBtn: document.getElementById("pvLoadMoreBtn"),
     side: document.getElementById("pvSide"),
-    recentList: document.getElementById("pvRecentList"),
+    companyList: document.getElementById("pvCompanyList"),
+    sideCount: document.getElementById("pvSideCount"),
     bottomBar: document.getElementById("pvBottomBar"),
     openSheetBtn: document.getElementById("pvOpenSheetBtn"),
     filterCountBadge: document.getElementById("pvFilterCountBadge"),
@@ -56,6 +56,13 @@
     backdrop: document.getElementById("pvSheetBackdrop"),
     sheetCloseBtn: document.getElementById("pvSheetCloseBtn"),
     sheetResetBtn: document.getElementById("pvSheetResetBtn"),
+    companyModalBackdrop: document.getElementById("pvCompanyModalBackdrop"),
+    companyModal: document.getElementById("pvCompanyModal"),
+    companyModalTitle: document.getElementById("pvCompanyModalTitle"),
+    companyModalMeta: document.getElementById("pvCompanyModalMeta"),
+    companyModalBody: document.getElementById("pvCompanyModalBody"),
+    companyModalCloseBtn: document.getElementById("pvCompanyModalCloseBtn"),
+    companyModalViewAllBtn: document.getElementById("pvCompanyModalViewAllBtn"),
   };
 
   function uniqueSorted(values) {
@@ -448,72 +455,157 @@
     }
   }
 
-  // ---------- 담당 고객 / 최근 검색 (사이드 패널) ----------
-  function loadRecentSearches() {
-    try {
-      var raw = window.localStorage.getItem(RECENT_SEARCH_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch (e) {
-      return [];
-    }
-  }
-
-  function saveRecentSearch(text) {
-    if (!text) return;
-    try {
-      var list = loadRecentSearches().filter(function (t) { return t !== text; });
-      list.unshift(text);
-      list = list.slice(0, RECENT_SEARCH_MAX);
-      window.localStorage.setItem(RECENT_SEARCH_KEY, JSON.stringify(list));
-    } catch (e) { /* 저장 실패 시 무시 */ }
-  }
-
+  // ---------- 담당 고객 (사이드 패널) ----------
+  // 현재 필터(팀/셀/영업명/이슈유형/메이저/검색)에 해당하는 고객사를 전부 보여준다(개수 제한 없음).
   function renderSidePanel(filtered) {
-    el.recentList.innerHTML = "";
+    el.companyList.innerHTML = "";
+    var companies = uniqueSorted(filtered.map(function (a) { return a.company; }));
 
-    var recents = loadRecentSearches();
-    if (recents.length) {
-      var recentHeader = document.createElement("p");
-      recentHeader.className = "pv-side__title";
-      recentHeader.style.marginTop = "0";
-      recentHeader.textContent = "최근 검색";
-      el.recentList.appendChild(recentHeader);
-      recents.forEach(function (text) {
-        el.recentList.appendChild(buildRecentItem(text, iconInitials(text)));
-      });
+    el.sideCount.textContent = companies.length ? " (" + companies.length.toLocaleString("ko-KR") + ")" : "";
+
+    if (!companies.length) {
+      var empty = document.createElement("p");
+      empty.className = "pv-company-modal__empty";
+      empty.style.padding = "4px 2px";
+      empty.textContent = "조건에 맞는 고객사가 없습니다.";
+      el.companyList.appendChild(empty);
+      return;
     }
 
-    var companies = uniqueSorted(filtered.map(function (a) { return a.company; })).slice(0, 8);
-    if (companies.length) {
-      var companyHeader = document.createElement("p");
-      companyHeader.className = "pv-side__title";
-      companyHeader.textContent = "담당 고객";
-      el.recentList.appendChild(companyHeader);
-      companies.forEach(function (name) {
-        el.recentList.appendChild(buildRecentItem(name, iconInitials(name)));
-      });
-    }
+    companies.forEach(function (name) {
+      el.companyList.appendChild(buildCompanyItem(name, iconInitials(name)));
+    });
   }
 
-  function buildRecentItem(label, iconText) {
+  function buildCompanyItem(label, iconText) {
     var btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "pv-recent-item";
+    btn.className = "pv-company-item";
     var icon = document.createElement("span");
-    icon.className = "pv-recent-item__icon";
+    icon.className = "pv-company-item__icon";
     icon.textContent = iconText;
     var span = document.createElement("span");
-    span.className = "pv-recent-item__label";
+    span.className = "pv-company-item__label";
     span.textContent = label;
     btn.appendChild(icon);
     btn.appendChild(span);
     btn.addEventListener("click", function () {
-      state.searchText = label;
-      el.searchInput.value = label;
-      state.visibleCount = PAGE_SIZE;
-      applyFiltersAndRender();
+      openCompanyModal(label);
     });
     return btn;
+  }
+
+  // ---------- 고객사 핵심 기사 요약 팝업 ----------
+  function getCompanyArticles(companyName) {
+    return state.articles.filter(function (a) { return a.company === companyName; });
+  }
+
+  function openCompanyModal(companyName) {
+    renderCompanyModal(companyName, getCompanyArticles(companyName));
+    el.companyModalBackdrop.hidden = false;
+    el.companyModal.hidden = false;
+  }
+
+  function closeCompanyModal() {
+    el.companyModalBackdrop.hidden = true;
+    el.companyModal.hidden = true;
+  }
+
+  function renderCompanyModal(companyName, articles) {
+    el.companyModalTitle.textContent = companyName;
+
+    var first = articles[0];
+    var metaParts = first ? [].concat(first.team || [], first.cell || [], first.reps || []).filter(Boolean) : [];
+    metaParts.push("기사 " + articles.length.toLocaleString("ko-KR") + "건");
+    el.companyModalMeta.textContent = metaParts.join(" · ");
+
+    el.companyModalBody.innerHTML = "";
+
+    if (!articles.length) {
+      var empty = document.createElement("p");
+      empty.className = "pv-company-modal__empty";
+      empty.textContent = "최근 수집된 기사가 없습니다.";
+      el.companyModalBody.appendChild(empty);
+      el.companyModalViewAllBtn.hidden = true;
+      return;
+    }
+
+    // articles는 news.json 생성 시 이미 "이슈유형 우선순위 → 최신순"으로 정렬되어 있으므로
+    // 그 순서 그대로 앞에서부터 N건만 보여주면 핵심 기사 요약이 된다.
+    var shown = articles.slice(0, COMPANY_MODAL_LIMIT);
+    shown.forEach(function (a) {
+      el.companyModalBody.appendChild(buildCompanyModalItem(a));
+    });
+
+    if (articles.length > shown.length) {
+      var more = document.createElement("p");
+      more.className = "pv-company-modal__empty";
+      more.textContent = "외 " + (articles.length - shown.length).toLocaleString("ko-KR") + "건 더 있습니다 · 아래 \"전체 보기\"에서 확인하세요.";
+      el.companyModalBody.appendChild(more);
+    }
+
+    el.companyModalViewAllBtn.hidden = false;
+  }
+
+  function buildCompanyModalItem(a) {
+    var href = a.originallink || a.link || "";
+    var item = document.createElement(href ? "a" : "div");
+    item.className = "pv-company-modal__item";
+    if (href) {
+      item.href = href;
+      item.target = "_blank";
+      item.rel = "noopener noreferrer";
+    }
+
+    var badges = document.createElement("div");
+    badges.className = "pv-company-modal__item-badges";
+    if (isFreshArticle(a)) {
+      var freshBadge = document.createElement("span");
+      freshBadge.className = "pv-badge-pill pv-badge-pill--new";
+      freshBadge.textContent = "오늘 새 기사";
+      badges.appendChild(freshBadge);
+    }
+    if (a.tag_label) {
+      var tagBadge = document.createElement("span");
+      tagBadge.className = "pv-badge-pill pv-badge-pill--" + a.tag_label;
+      tagBadge.textContent = a.tag_label;
+      badges.appendChild(tagBadge);
+    }
+    item.appendChild(badges);
+
+    var title = document.createElement("p");
+    title.className = "pv-company-modal__item-title";
+    title.textContent = a.title || "";
+    item.appendChild(title);
+
+    if (a.description) {
+      var desc = document.createElement("p");
+      desc.className = "pv-company-modal__item-desc";
+      desc.textContent = a.description;
+      item.appendChild(desc);
+    }
+
+    if ((a.matched_sub_names || []).length) {
+      var relWrap = document.createElement("div");
+      relWrap.className = "pv-related-badges";
+      relWrap.style.marginBottom = "4px";
+      a.matched_sub_names.forEach(function (sub) {
+        var b = document.createElement("span");
+        b.className = "pv-badge-pill";
+        b.style.background = "var(--border-soft)";
+        b.style.color = "var(--text-secondary)";
+        b.textContent = "관련: " + sub;
+        relWrap.appendChild(b);
+      });
+      item.appendChild(relWrap);
+    }
+
+    var meta = document.createElement("p");
+    meta.className = "pv-company-modal__item-meta";
+    meta.textContent = (a.press || "") + (a.pubDate_display ? " · " + a.pubDate_display : "");
+    item.appendChild(meta);
+
+    return item;
   }
 
   // ---------- 자동완성 ----------
@@ -594,7 +686,6 @@
     state.searchText = item.value;
     el.searchInput.value = item.value;
     el.autocomplete.hidden = true;
-    saveRecentSearch(item.value);
     state.visibleCount = PAGE_SIZE;
     applyFiltersAndRender();
   }
@@ -638,7 +729,6 @@
         e.preventDefault();
         selectAutocompleteItem(autocompleteItems[autocompleteActiveIndex]);
       } else if (state.searchText) {
-        saveRecentSearch(state.searchText);
         el.autocomplete.hidden = true;
       }
     } else if (e.key === "Escape") {
@@ -715,6 +805,26 @@
     state.visibleCount = PAGE_SIZE;
     updateFilterBadge();
     applyFiltersAndRender();
+  });
+
+  // ---------- 고객사 핵심 기사 요약 팝업 이벤트 ----------
+  el.companyModalCloseBtn.addEventListener("click", closeCompanyModal);
+  el.companyModalBackdrop.addEventListener("click", closeCompanyModal);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !el.companyModal.hidden) closeCompanyModal();
+  });
+  el.companyModalViewAllBtn.addEventListener("click", function () {
+    var name = el.companyModalTitle.textContent;
+    closeCompanyModal();
+    state.searchText = name;
+    el.searchInput.value = name;
+    state.visibleCount = PAGE_SIZE;
+    applyFiltersAndRender();
+    if (prefersReducedMotion) {
+      window.scrollTo(0, 0);
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   });
 
   // ---------- TOP 버튼 ----------
