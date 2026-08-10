@@ -535,7 +535,7 @@
     }
 
     var entry = state.companySummaries[companyName];
-    var days = state.summaryLookbackDays || 5;
+    var days = state.summaryLookbackDays || 20;
     // fetch_news.py가 "고객명은 겹쳤지만 실제로는 무관한 기사뿐"이라고 AI가 스스로 판단했을 때
     // 돌려주는 안내 문장. 이 경우엔 AI 요약 박스나 참고 기사 목록 없이, 새 소식 없음과 같은
     // 형태로 깔끔하게 보여준다(무관한 원문 기사를 참고 기사로 나열하면 오히려 혼란스러움).
