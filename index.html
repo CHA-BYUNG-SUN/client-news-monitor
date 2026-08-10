@@ -62,9 +62,9 @@
   </header>
 
   <main class="pv-main">
-    <aside class="pv-side" id="pvSide" aria-label="담당 고객 및 최근 검색">
-      <h2 class="pv-side__title">담당 고객 / 최근 검색</h2>
-      <div id="pvRecentList" class="pv-recent-list"></div>
+    <aside class="pv-side" id="pvSide" aria-label="담당 고객 목록">
+      <h2 class="pv-side__title">담당 고객<span class="pv-side__count" id="pvSideCount"></span></h2>
+      <div id="pvCompanyList" class="pv-company-list"></div>
     </aside>
 
     <section class="pv-feed">
@@ -92,6 +92,22 @@
   <svg viewBox="0 0 24 24" aria-hidden="true" class="pv-top-btn__arrow"><path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   <span class="pv-top-btn__label">TOP</span>
 </button>
+
+<div class="pv-company-modal-backdrop" id="pvCompanyModalBackdrop" hidden></div>
+
+<div class="pv-company-modal" id="pvCompanyModal" hidden role="dialog" aria-modal="true" aria-labelledby="pvCompanyModalTitle">
+  <div class="pv-company-modal__header">
+    <div class="pv-company-modal__heading">
+      <h3 id="pvCompanyModalTitle" class="pv-company-modal__title"></h3>
+      <p id="pvCompanyModalMeta" class="pv-company-modal__meta"></p>
+    </div>
+    <button type="button" id="pvCompanyModalCloseBtn" class="pv-company-modal__close" aria-label="닫기">✕</button>
+  </div>
+  <div id="pvCompanyModalBody" class="pv-company-modal__body"></div>
+  <div class="pv-company-modal__footer">
+    <button type="button" id="pvCompanyModalViewAllBtn" class="pv-company-modal__viewall">이 고객사 기사 전체 보기</button>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>
