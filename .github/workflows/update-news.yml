@@ -35,7 +35,7 @@ jobs:
           NEWS_LOOKBACK_DAYS: "20"
           NEWS_REQUEST_DELAY: "0.2"
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          SUMMARY_LOOKBACK_DAYS: "5"
+          SUMMARY_LOOKBACK_DAYS: "20"
         run: python scripts/fetch_news.py
 
       - name: 변경사항 커밋 및 푸시
