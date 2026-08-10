@@ -24,6 +24,12 @@
 - NEWS_LOOKBACK_DAYS : 며칠 이내 기사만 남길지 (기본 7일)
 - NEWS_DISPLAY_PER_QUERY : 고객사별 1회 호출 시 가져올 기사 수 (기본 100, 최대 100)
 - NEWS_REQUEST_DELAY : 고객사별 API 호출 간 대기 시간(초, 기본 0.2) - 고객사 수가 많을 때 조정
+- ANTHROPIC_API_KEY : Anthropic Claude API 키 (선택). 설정하면 고객사별 "최근 N일 AI 요약"을
+  함께 생성해 data/news.json 의 company_summaries 필드에 저장한다. 설정하지 않으면 이 단계는
+  건너뛰고(company_summaries 필드 자체가 생성되지 않음) 기존처럼 기사 목록만 저장한다.
+- SUMMARY_LOOKBACK_DAYS : AI 요약에 포함할 기사 기간(일 단위, 기본 5일)
+- SUMMARY_MAX_ARTICLES : 고객사 1건 요약 생성 시 참고할 최대 기사 수(기본 5건)
+- SUMMARY_REQUEST_DELAY : 고객사별 Claude API 호출 간 대기 시간(초, 기본 0.3)
 """
 
 import os
@@ -44,6 +50,8 @@ CONFIG_DIR = os.path.join(BASE_DIR, "config")
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
 NAVER_API_URL = "https://openapi.naver.com/v1/search/news.json"
+ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
+ANTHROPIC_MODEL = "claude-haiku-4-5"
 
 KST = timezone(timedelta(hours=9))
 
@@ -249,6 +257,96 @@ def is_duplicate(article, seen_articles, title_similarity_threshold=0.82):
     return None
 
 
+def call_anthropic_summary(prompt, api_key, retries=3):
+    """Claude Haiku에게 요약 문장 생성을 요청한다. 실패하면 None을 반환한다
+    (이 고객사는 이번 회차에 요약 없이 건너뛰고, 기존 기사 목록은 그대로 저장된다)."""
+    body = json.dumps({
+        "model": ANTHROPIC_MODEL,
+        "max_tokens": 300,
+        "messages": [{"role": "user", "content": prompt}],
+    }).encode("utf-8")
+    req = urlrequest.Request(ANTHROPIC_API_URL, data=body, method="POST")
+    req.add_header("x-api-key", api_key)
+    req.add_header("anthropic-version", "2023-06-01")
+    req.add_header("content-type", "application/json")
+
+    last_err = None
+    for attempt in range(1, retries + 1):
+        try:
+            with urlrequest.urlopen(req, timeout=30) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                parts = data.get("content", [])
+                text = "".join(p.get("text", "") for p in parts if p.get("type") == "text")
+                text = text.strip()
+                return text or None
+        except urlerror.HTTPError as e:
+            last_err = e
+            # 429(요청 과다) 등은 조금 더 여유있게 기다린 뒤 재시도
+            wait = 3.0 * attempt if e.code == 429 else 1.5 * attempt
+            print(f"    [경고] Claude 요약 호출 실패 (시도 {attempt}/{retries}): HTTP {e.code}", file=sys.stderr)
+            time.sleep(wait)
+        except Exception as e:
+            last_err = e
+            print(f"    [경고] Claude 요약 호출 실패 (시도 {attempt}/{retries}): {e}", file=sys.stderr)
+            time.sleep(1.5 * attempt)
+    print(f"    [오류] Claude 요약 실패, 이 고객사는 이번 회차에 요약 없이 건너뜀: {last_err}", file=sys.stderr)
+    return None
+
+
+def build_summary_prompt(company_name, articles):
+    lines = []
+    for a in articles:
+        lines.append(
+            f"- [{a['tag_label']}] {a['title']} ({a['press']}, {a['pubDate_display']}): {a['description']}"
+        )
+    articles_text = "\n".join(lines)
+    return (
+        f"다음은 '{company_name}'과 관련된 최근 기사 목록입니다. "
+        "이 기사들의 핵심 내용을 종합해서 한국어로 2~3문장의 짧은 요약을 작성해 주세요. "
+        "영업사원이 이 고객사를 방문하기 전에 빠르게 훑어볼 수 있는 요약이어야 합니다. "
+        "불필요한 서론이나 인사말 없이 바로 핵심 내용만 문장으로 작성하고, "
+        "문장 앞에 번호나 불릿, 따옴표를 붙이지 마세요.\n\n"
+        f"{articles_text}"
+    )
+
+
+def generate_company_summaries(all_articles, api_key, lookback_days=5, max_articles=5, request_delay=0.3):
+    """최근 lookback_days일 이내 기사가 있는 고객사만 골라 Claude Haiku로 2~3문장 요약을 생성한다.
+    all_articles는 이미 '우선순위 태그 -> 최신순'으로 정렬돼 있으므로, 고객사별로 그 순서 그대로
+    상위 max_articles건만 골라 요약 재료로 쓴다.
+    반환값은 {고객사명: {"summary": str, "based_on": int, "generated_at": iso}} 형태이며,
+    요약 생성에 실패한 고객사는 이 딕셔너리에 포함되지 않는다(웹사이트에서는 "새 소식 없음"과
+    구분하기 위해, 이 함수를 호출한 것 자체는 output에 company_summaries 키를 남겨 구분한다)."""
+    cutoff = datetime.now(KST) - timedelta(days=lookback_days)
+    by_company = {}
+    for a in all_articles:
+        try:
+            pub_dt = datetime.fromisoformat(a["pubDate_iso"])
+        except Exception:
+            continue
+        if pub_dt < cutoff:
+            continue
+        by_company.setdefault(a["company"], []).append(a)
+
+    summaries = {}
+    total = len(by_company)
+    print(f"\nAI 요약 생성 대상: {total}개 고객사 (최근 {lookback_days}일 이내 기사 보유)")
+    for i, (company_name, articles) in enumerate(by_company.items(), start=1):
+        top_articles = articles[:max_articles]
+        prompt = build_summary_prompt(company_name, top_articles)
+        print(f"  [{i}/{total}] 요약 생성: {company_name} ({len(top_articles)}건 기준)")
+        summary_text = call_anthropic_summary(prompt, api_key)
+        if summary_text:
+            summaries[company_name] = {
+                "summary": summary_text,
+                "based_on": len(top_articles),
+                "generated_at": datetime.now(KST).isoformat(),
+            }
+        time.sleep(request_delay)
+    print(f"AI 요약 생성 완료: {len(summaries)}/{total}개 고객사 성공")
+    return summaries
+
+
 def main():
     client_id = os.environ.get("NAVER_CLIENT_ID")
     client_secret = os.environ.get("NAVER_CLIENT_SECRET")
@@ -264,6 +362,11 @@ def main():
     lookback_days = int(os.environ.get("NEWS_LOOKBACK_DAYS", "7"))
     display = min(int(os.environ.get("NEWS_DISPLAY_PER_QUERY", "100")), 100)
     request_delay = float(os.environ.get("NEWS_REQUEST_DELAY", "0.2"))
+
+    anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY")
+    summary_lookback_days = int(os.environ.get("SUMMARY_LOOKBACK_DAYS", "5"))
+    summary_max_articles = int(os.environ.get("SUMMARY_MAX_ARTICLES", "5"))
+    summary_request_delay = float(os.environ.get("SUMMARY_REQUEST_DELAY", "0.3"))
 
     companies_cfg = load_json("companies.json")["companies"]
     media_cfg = load_json("major_media.json")
@@ -401,6 +504,23 @@ def main():
         "total_articles": len(all_articles),
         "articles": all_articles,
     }
+
+    if anthropic_api_key:
+        company_summaries = generate_company_summaries(
+            all_articles,
+            anthropic_api_key,
+            lookback_days=summary_lookback_days,
+            max_articles=summary_max_articles,
+            request_delay=summary_request_delay,
+        )
+        output["summary_lookback_days"] = summary_lookback_days
+        output["company_summaries"] = company_summaries
+    else:
+        print(
+            "\n[안내] ANTHROPIC_API_KEY가 설정되어 있지 않아 고객사별 AI 요약은 생성하지 않습니다. "
+            "(웹사이트는 이 경우 자동으로 기존 기사 목록 방식으로 표시합니다)",
+            file=sys.stderr,
+        )
 
     os.makedirs(DATA_DIR, exist_ok=True)
     out_path = os.path.join(DATA_DIR, "news.json")
