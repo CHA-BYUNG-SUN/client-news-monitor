@@ -109,6 +109,42 @@ body {
   white-space: nowrap;
 }
 
+/* 영업 허브 홈 버튼 (2026-08-19 추가) */
+.pv-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hub-home-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--misumi-deep-blue);
+  background: var(--misumi-deep-blue);
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.hub-home-btn:hover { background: var(--misumi-blue); border-color: var(--misumi-blue); }
+.hub-home-btn:active { transform: translateY(1px); }
+.hub-home-btn:focus-visible { outline: 2px solid var(--misumi-yellow); outline-offset: 2px; }
+.hub-home-btn__icon { width: 18px; height: 18px; flex-shrink: 0; }
+@media (max-width: 380px) {
+  .hub-home-btn { padding: 8px; }
+  .hub-home-btn__label { display: none; }
+}
+
 .pv-status-block {
   display: flex;
   flex-wrap: wrap;
