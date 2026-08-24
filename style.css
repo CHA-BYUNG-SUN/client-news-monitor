@@ -92,6 +92,25 @@ body {
   min-width: 0;
 }
 
+/* 담당 고객 목록 열기(햄버거) 버튼: 1024px 미만에서만 보임 (2026-08-24 추가) */
+.pv-side-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--misumi-deep-blue);
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.pv-side-toggle-btn svg { width: 20px; height: 20px; }
+.pv-side-toggle-btn:active { transform: translateY(1px); }
+
 .pv-logo {
   height: 34px;
   width: auto;
@@ -311,6 +330,57 @@ body {
 }
 
 .pv-side { display: none; }
+
+/* 1024px 미만: 담당 고객 목록을 햄버거로 열고 닫는 좌측 드로어로 표시 (2026-08-24 추가) */
+@media (max-width: 1023px) {
+  .pv-side {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(320px, 84vw);
+    background: var(--surface);
+    padding: 16px;
+    z-index: 45;
+    box-shadow: 8px 0 28px rgba(20, 33, 61, 0.18);
+    transform: translateX(-100%);
+    transition: transform 220ms ease;
+    overflow-y: auto;
+  }
+  .pv-side.is-open {
+    transform: translateX(0);
+  }
+  .pv-side__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+}
+
+.pv-side-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 33, 61, 0.45);
+  z-index: 44;
+}
+.pv-side-backdrop[hidden] { display: none; }
+
+.pv-side-close {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: var(--chip-bg);
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+body.pv-no-scroll { overflow: hidden; }
 
 .pv-feed__title {
   font-family: Pretendard, sans-serif;
@@ -936,6 +1006,12 @@ body {
     top: calc(var(--header-h, 240px) + 12px);
     max-height: calc(100vh - var(--header-h, 240px) - 28px);
     overflow-y: auto;
+  }
+  /* 1024px 이상에서는 사이드바가 항상 보이므로 햄버거/닫기 버튼과 드로어용 배경은 불필요 */
+  .pv-side-toggle-btn,
+  .pv-side-close,
+  .pv-side-backdrop {
+    display: none;
   }
 }
 
