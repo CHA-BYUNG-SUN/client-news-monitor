@@ -1,5 +1,5 @@
 {
-  "_comment": "담당 고객사 목록. scripts/import_companies.py 로 엑셀에서 자동 생성되었습니다.",
+  "_comment": "담당 고객사 목록. scripts/auto_update_companies.py 로 2026-08-24_dbo_TA_LIST_TSC_FY26.csv 기준 매일 자동 생성/갱신됩니다.",
   "companies": [
     {
       "code": "989690",
@@ -19119,7 +19119,7 @@
         "김수언"
       ],
       "industry": [
-        "2자전지"
+        "2차전지"
       ]
     },
     {
