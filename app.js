@@ -46,6 +46,9 @@
     errorState: document.getElementById("pvErrorState"),
     loadMoreBtn: document.getElementById("pvLoadMoreBtn"),
     side: document.getElementById("pvSide"),
+    sideToggleBtn: document.getElementById("pvSideToggleBtn"),
+    sideCloseBtn: document.getElementById("pvSideCloseBtn"),
+    sideBackdrop: document.getElementById("pvSideBackdrop"),
     companyList: document.getElementById("pvCompanyList"),
     sideCount: document.getElementById("pvSideCount"),
     bottomBar: document.getElementById("pvBottomBar"),
@@ -492,6 +495,7 @@
     btn.appendChild(icon);
     btn.appendChild(span);
     btn.addEventListener("click", function () {
+      closeSide();
       openCompanyModal(label);
     });
     return btn;
@@ -893,6 +897,30 @@
   el.openSheetBtn.addEventListener("click", openSheet);
   el.sheetCloseBtn.addEventListener("click", closeSheet);
   el.backdrop.addEventListener("click", closeSheet);
+
+  // ---------- 담당 고객 목록 드로어 (1024px 미만: 햄버거 버튼으로 열고 닫기) ----------
+  function openSide() {
+    el.side.classList.add("is-open");
+    el.sideBackdrop.hidden = false;
+    el.sideToggleBtn.setAttribute("aria-expanded", "true");
+    document.body.classList.add("pv-no-scroll");
+  }
+  function closeSide() {
+    el.side.classList.remove("is-open");
+    el.sideBackdrop.hidden = true;
+    el.sideToggleBtn.setAttribute("aria-expanded", "false");
+    document.body.classList.remove("pv-no-scroll");
+  }
+  el.sideToggleBtn.addEventListener("click", openSide);
+  el.sideCloseBtn.addEventListener("click", closeSide);
+  el.sideBackdrop.addEventListener("click", closeSide);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && el.side.classList.contains("is-open")) closeSide();
+  });
+  // 데스크톱 폭으로 넘어가면(사이드바가 항상 보이는 레이아웃으로 전환) 드로어 상태를 정리
+  window.addEventListener("resize", function () {
+    if (window.matchMedia("(min-width: 1024px)").matches) closeSide();
+  });
   el.majorOnlyCheckbox.addEventListener("change", function (e) {
     state.majorOnly = e.target.checked;
     state.visibleCount = PAGE_SIZE;
