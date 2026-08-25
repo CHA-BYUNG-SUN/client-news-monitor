@@ -332,7 +332,10 @@ def generate_company_summaries(all_articles, api_key, lookback_days=20, max_arti
             continue
         if pub_dt < cutoff:
             continue
-        by_company.setdefault(a["company"], []).append(a)
+        # 기사 하나가 여러 회사(같은 브랜드의 여러 사업장)에 동시에 관련된 경우,
+        # 관련된 모든 회사의 요약 재료 목록에 포함시킨다.
+        for company_name in a.get("companies", []):
+            by_company.setdefault(company_name, []).append(a)
 
     summaries = {}
     total = len(by_company)
@@ -455,11 +458,17 @@ def main():
             matched_sub_names = find_matched_sub_names(title, description, sub_names)
 
             article = {
-                "company": name,
-                "matched_sub_names": matched_sub_names,
-                "team": team,
-                "cell": cell,
-                "reps": reps,
+                # 2026-08-24 변경: 예전에는 "company"(단일 문자열)였는데, 같은 브랜드의 여러
+                # 사업장(예: 삼성전자 생산기술연구소/구미공장/광주공장)이 고객 마스터에 각각
+                # 등록돼 있고 검색어가 겹치는 경우, 아래 전역 중복 제거 로직을 통과할 때
+                # 나중에 처리되는 사업장이 관련 기사를 하나도 못 가져가는 문제가 있었다.
+                # "companies"(배열)로 바꾸고, 중복으로 판정된 기사는 버리지 않고 관련된
+                # 모든 회사/팀/셀/담당자를 이 배열에 계속 합쳐서 모든 관련 사업장에 표시되게 한다.
+                "companies": [name],
+                "matched_sub_names": list(matched_sub_names),
+                "team": list(team),
+                "cell": list(cell),
+                "reps": list(reps),
                 "title": title,
                 "description": description,
                 "link": link,
@@ -478,8 +487,31 @@ def main():
             dup = is_duplicate(article, seen_articles)
             if dup:
                 skipped_dup += 1
-                # 기존 기사가 비메이저이고 새 기사가 메이저 언론사면 메이저 기사로 교체
+                # 같은 기사가 다른 회사(주로 같은 브랜드의 다른 사업장)에서도 검색된 경우,
+                # 그냥 버리지 않고 이 회사/팀/셀/담당자/관련 SUB고객명을 기존 기사에 합쳐서
+                # 모든 관련 사업장의 목록·필터·요약에 빠짐없이 반영되게 한다.
+                if name not in dup["companies"]:
+                    dup["companies"].append(name)
+                for t in team:
+                    if t not in dup["team"]:
+                        dup["team"].append(t)
+                for c in cell:
+                    if c not in dup["cell"]:
+                        dup["cell"].append(c)
+                for r in reps:
+                    if r not in dup["reps"]:
+                        dup["reps"].append(r)
+                for sn in matched_sub_names:
+                    if sn not in dup["matched_sub_names"]:
+                        dup["matched_sub_names"].append(sn)
+                # 기존 기사가 비메이저이고 새 기사가 메이저 언론사면 본문/링크/언론사 정보만
+                # 메이저 기사로 교체하되, 지금까지 합쳐둔 회사/팀/셀/담당자 정보는 유지한다.
                 if is_major and not dup["major"]:
+                    article["companies"] = dup["companies"]
+                    article["team"] = dup["team"]
+                    article["cell"] = dup["cell"]
+                    article["reps"] = dup["reps"]
+                    article["matched_sub_names"] = dup["matched_sub_names"]
                     seen_articles.remove(dup)
                     all_articles.remove(dup)
                     seen_articles.append(article)
