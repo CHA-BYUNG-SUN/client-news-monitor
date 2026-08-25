@@ -84,14 +84,28 @@ def find_col_index(headers, names):
 
 
 def clean_query(raw_name):
+    """고객명에서 뉴스 검색에 쓸 검색어를 뽑아낸다.
+
+    2026-08-24 수정: 예전에는 "(주)"/"㈜" 등 법인 표기를 빈 문자열로 치환해서 지웠는데,
+    그러면 "현대자동차(주)울산공장"처럼 법인 표기가 "브랜드명"과 "사업장명" 사이에 낀
+    이름은 "현대자동차울산공장"처럼 공백 없이 그대로 붙어버려서, 실제 어떤 기사 본문에도
+    그대로 등장할 수 없는 검색어가 만들어지는 문제가 있었다(대기업 사업장인데도 뉴스가
+    한 건도 안 잡히는 원인이었음). 법인 표기를 "공백"으로 치환하고, 남아있는 대괄호/괄호
+    문자도 공백으로 치환한 뒤 중복 공백을 정리해서, "현대자동차 울산공장"처럼 실제 기사에
+    등장할 수 있는 형태에 가깝게 만든다. (원래 이름 자체에 공백이 전혀 없는 복합어,
+    예: "기아자동차화성공장"은 이 방식으로는 못 고치며 company_overrides.json의
+    search_queries로 개별 대응해야 한다.)
+    """
     if not raw_name:
         return raw_name
     name = str(raw_name)
     for token in SUFFIX_TOKENS:
-        name = name.replace(token, "")
+        name = name.replace(token, " ")
     name = re.sub(r"_ERP$", "", name, flags=re.IGNORECASE)
     name = re.split(r"[-_]", name)[0]
-    return name.strip()
+    name = re.sub(r"[\[\]\(\)]", " ", name)
+    name = re.sub(r"\s+", " ", name).strip()
+    return name
 
 
 def import_master_format(rows, col_idx):
