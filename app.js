@@ -148,25 +148,58 @@
   }
 
   // ---------- 필터 옵션 (종속 필터) ----------
-  function articleMatchesTeamCell(a, team, cell) {
-    if (team !== "전체" && (a.team || []).indexOf(team) === -1) return false;
-    if (cell !== "전체" && (a.cell || []).indexOf(cell) === -1) return false;
+  // 2026-08-25 수정: 예전에는 기사 하나에 붙어있는 team/cell/reps를 그냥 "배열"로 보고
+  // 필터링했는데, 여러 회사가 한 기사에 같이 걸리는 경우(예: 배터리 장비업체 6곳을 함께
+  // 언급하는 산업 동향 기사) 그 기사의 team/cell/reps 배열에는 관련된 모든 회사의 정보가
+  // 전부 섞여 들어간다. 그 상태로 "팀 -> 셀 -> 영업명" 종속 필터를 걸면, 예를 들어 TSC4를
+  // 선택해도 그 기사에 같이 걸린 TSC3 소속 담당자까지 영업명 목록에 나오는 문제가 있었다.
+  // 이제는 회사별 연결 정보(company_links)를 기준으로, "이 회사가 선택된 팀/셀/영업명과
+  // 실제로 일치하는지"를 회사 단위로 정확히 따진다.
+  function linkMatchesActiveFilters(l) {
+    if (state.selectedTeam !== "전체" && (l.team || []).indexOf(state.selectedTeam) === -1) return false;
+    if (state.selectedCell !== "전체" && (l.cell || []).indexOf(state.selectedCell) === -1) return false;
+    if (state.selectedRep !== "전체" && (l.reps || []).indexOf(state.selectedRep) === -1) return false;
+    if (state.searchText) {
+      var t = state.searchText.toLowerCase();
+      var hit = (l.name || "").toLowerCase().indexOf(t) !== -1;
+      if (!hit) hit = (l.matched_sub_names || []).some(function (s) { return (s || "").toLowerCase().indexOf(t) !== -1; });
+      if (!hit) hit = (l.reps || []).some(function (r) { return (r || "").toLowerCase().indexOf(t) !== -1; });
+      if (!hit) return false;
+    }
     return true;
   }
 
+  // 팀/셀/영업명 중 하나라도 선택돼 있거나 검색어가 있으면 "회사 단위" 정밀 필터가 필요하다.
+  function hasLinkLevelFilters() {
+    return state.selectedTeam !== "전체" || state.selectedCell !== "전체" || state.selectedRep !== "전체" || !!state.searchText;
+  }
+
+  // 현재 필터 조건에 실제로 부합하는 회사 연결(company_links)만 골라낸다.
+  function getMatchingLinks(a) {
+    return (a.company_links || []).filter(linkMatchesActiveFilters);
+  }
+
+  function articleMatchesTeamCell(a, team, cell) {
+    return (a.company_links || []).some(function (l) {
+      if (team !== "전체" && (l.team || []).indexOf(team) === -1) return false;
+      if (cell !== "전체" && (l.cell || []).indexOf(cell) === -1) return false;
+      return true;
+    });
+  }
+
   function buildFilterOptions() {
-    var teamPool = state.articles;
-    var teams = uniqueSorted(teamPool.reduce(function (acc, a) { return acc.concat(a.team || []); }, []));
+    var allLinks = state.articles.reduce(function (acc, a) { return acc.concat(a.company_links || []); }, []);
+    var teams = uniqueSorted(allLinks.reduce(function (acc, l) { return acc.concat(l.team || []); }, []));
 
-    var cellPool = state.articles.filter(function (a) {
-      return state.selectedTeam === "전체" || (a.team || []).indexOf(state.selectedTeam) !== -1;
+    var cellLinks = allLinks.filter(function (l) {
+      return state.selectedTeam === "전체" || (l.team || []).indexOf(state.selectedTeam) !== -1;
     });
-    var cells = uniqueSorted(cellPool.reduce(function (acc, a) { return acc.concat(a.cell || []); }, []));
+    var cells = uniqueSorted(cellLinks.reduce(function (acc, l) { return acc.concat(l.cell || []); }, []));
 
-    var repPool = state.articles.filter(function (a) {
-      return articleMatchesTeamCell(a, state.selectedTeam, state.selectedCell);
+    var repLinks = cellLinks.filter(function (l) {
+      return state.selectedCell === "전체" || (l.cell || []).indexOf(state.selectedCell) !== -1;
     });
-    var reps = uniqueSorted(repPool.reduce(function (acc, a) { return acc.concat(a.reps || []); }, []));
+    var reps = uniqueSorted(repLinks.reduce(function (acc, l) { return acc.concat(l.reps || []); }, []));
 
     if (state.selectedCell !== "전체" && cells.indexOf(state.selectedCell) === -1) state.selectedCell = "전체";
     if (state.selectedRep !== "전체" && reps.indexOf(state.selectedRep) === -1) state.selectedRep = "전체";
@@ -212,23 +245,17 @@
   }
 
   // ---------- 검색 매칭 ----------
-  function matchesSearch(a, text) {
-    if (!text) return true;
-    var t = text.toLowerCase();
-    if ((a.companies || []).some(function (c) { return (c || "").toLowerCase().indexOf(t) !== -1; })) return true;
-    if ((a.matched_sub_names || []).some(function (s) { return (s || "").toLowerCase().indexOf(t) !== -1; })) return true;
-    if ((a.reps || []).some(function (r) { return (r || "").toLowerCase().indexOf(t) !== -1; })) return true;
-    return false;
-  }
-
+  // 2026-08-25 수정: 팀/셀/영업명/검색어 조건을 예전에는 기사 전체 배열(team/cell/reps) 기준으로
+  // 따로따로 검사했는데, 여러 회사가 함께 걸린 기사에서는 이 방식이 "이 기사에 걸린 회사 중
+  // 아무나 한 명이라도 조건과 맞으면 통과"가 되어버려서 다른 회사 소속 담당자를 검색해도
+  // 관련 없는 회사가 같이 나오는 문제가 있었다. 이제는 getMatchingLinks(a)로 회사 단위에서
+  // 팀/셀/영업명/검색어를 모두 만족하는 회사가 실제로 있는지를 확인한다.
   function getFiltered() {
+    var linkFilterActive = hasLinkLevelFilters();
     return state.articles.filter(function (a) {
       if (state.selectedTag !== "전체" && a.tag_label !== state.selectedTag) return false;
-      if (state.selectedTeam !== "전체" && (a.team || []).indexOf(state.selectedTeam) === -1) return false;
-      if (state.selectedCell !== "전체" && (a.cell || []).indexOf(state.selectedCell) === -1) return false;
-      if (state.selectedRep !== "전체" && (a.reps || []).indexOf(state.selectedRep) === -1) return false;
       if (state.majorOnly && !a.major) return false;
-      if (!matchesSearch(a, state.searchText)) return false;
+      if (linkFilterActive && getMatchingLinks(a).length === 0) return false;
       return true;
     });
   }
@@ -468,9 +495,16 @@
 
   // ---------- 담당 고객 (사이드 패널) ----------
   // 현재 필터(팀/셀/영업명/이슈유형/메이저/검색)에 해당하는 고객사를 전부 보여준다(개수 제한 없음).
+  // 2026-08-25 수정: 필터가 걸려 있을 때는 기사에 걸린 회사 전체가 아니라, 그 필터 조건에
+  // "실제로 부합하는" 회사만 골라서 보여준다(예: "김훈" 검색 시 그 기사에 같이 언급된
+  // 다른 담당자의 회사까지 나오지 않도록).
   function renderSidePanel(filtered) {
     el.companyList.innerHTML = "";
-    var companies = uniqueSorted(filtered.reduce(function (acc, a) { return acc.concat(a.companies || []); }, []));
+    var linkFilterActive = hasLinkLevelFilters();
+    var companies = uniqueSorted(filtered.reduce(function (acc, a) {
+      var links = linkFilterActive ? getMatchingLinks(a) : (a.company_links || []);
+      return acc.concat(links.map(function (l) { return l.name; }));
+    }, []));
 
     el.sideCount.textContent = companies.length ? " (" + companies.length.toLocaleString("ko-KR") + ")" : "";
 
@@ -535,7 +569,11 @@
     el.companyModalBody.innerHTML = "";
 
     var first = articles[0];
-    var baseMetaParts = first ? [].concat(first.team || [], first.cell || [], first.reps || []).filter(Boolean) : [];
+    // 2026-08-25 수정: 여러 회사가 함께 걸린 기사(first)의 team/cell/reps를 그냥 통째로
+    // 쓰면 이 고객사와 무관한 다른 회사의 팀/담당자가 같이 표시될 수 있다. 이 고객사
+    // (companyName) 자신의 company_links 항목만 골라서 메타 정보를 만든다.
+    var firstLink = first ? (first.company_links || []).filter(function (l) { return l.name === companyName; })[0] : null;
+    var baseMetaParts = firstLink ? [].concat(firstLink.team || [], firstLink.cell || [], firstLink.reps || []).filter(Boolean) : [];
 
     // company_summaries가 news.json에 아예 없으면(구버전 데이터 / 이번 회차에 AI 요약을 안 돌린 날)
     // 예전처럼 기사 카드 목록을 그대로 보여준다(항상 동작하는 기본 방식으로 자동 전환).
@@ -718,16 +756,19 @@
   function buildAutocompleteData(text) {
     if (!text) return [];
     var t = text.toLowerCase();
+    // 2026-08-25 수정: 여러 회사가 함께 걸린 기사의 team/cell/reps를 그대로 쓰면 자동완성
+    // 미리보기(예: "OO 검색 -> 담당: 김훈")에 실제로는 무관한 담당자가 나올 수 있어서,
+    // 회사별/담당자별 연결 정보(company_links)를 기준으로 만든다.
     var companyMap = {};
     var repMap = {};
     state.articles.forEach(function (a) {
-      (a.companies || []).forEach(function (c) {
-        if (c && !companyMap[c]) {
-          companyMap[c] = { team: a.team, cell: a.cell, reps: a.reps };
+      (a.company_links || []).forEach(function (l) {
+        if (l.name && !companyMap[l.name]) {
+          companyMap[l.name] = { team: l.team, cell: l.cell, reps: l.reps };
         }
-      });
-      (a.reps || []).forEach(function (rep) {
-        if (rep && !repMap[rep]) repMap[rep] = { team: a.team, cell: a.cell };
+        (l.reps || []).forEach(function (rep) {
+          if (rep && !repMap[rep]) repMap[rep] = { team: l.team, cell: l.cell };
+        });
       });
     });
 
@@ -986,10 +1027,43 @@
           // 2026-08-24 변경: fetch_news.py가 기사당 회사를 "company"(단일 문자열) 대신
           // "companies"(배열)로 내려주도록 바뀜(같은 브랜드의 여러 사업장이 같은 기사에
           // 동시에 걸리는 경우, 먼저 처리된 사업장만 기사를 독점하지 않고 관련된 모든
-          // 사업장에 표시하기 위함). 혹시 예전 방식(company 단일 문자열)으로 생성된
-          // news.json이 아직 남아있어도 깨지지 않도록 여기서 항상 companies 배열로 맞춰준다.
+          // 사업장에 표시하기 위함).
+          //
+          // 2026-08-25 추가 수정: fetch_news.py가 회사별 팀/셀/담당자 연결 정보를
+          // "company_links" 배열(회사마다 자기 team/cell/reps를 따로 보존)로 내려주도록
+          // 한 단계 더 바뀜. 예전 news.json에는 company_links가 없을 수 있으므로,
+          // 아래에서 예전 스키마들을 모두 company_links 형태로 맞춰준다.
+          // - companies(배열) + team/cell/reps(전체 통합 배열)만 있는 경우: 회사별 정확한
+          //   연결 정보 자체가 데이터에 없으므로 임시로 통합 배열을 그대로 쓴다. 이 경우는
+          //   fetch_news.py가 다음 번 실행되어 news.json이 새로 만들어지면 정확한 값으로
+          //   자동 교체된다.
+          // - company(단일 문자열)만 있는 가장 오래된 스키마: 회사가 하나뿐이므로 그대로
+          //   정확하게 옮길 수 있다.
+          if (!a.company_links) {
+            if (a.companies && a.companies.length) {
+              a.company_links = a.companies.map(function (name) {
+                return {
+                  name: name,
+                  team: a.team || [],
+                  cell: a.cell || [],
+                  reps: a.reps || [],
+                  matched_sub_names: a.matched_sub_names || [],
+                };
+              });
+            } else if (a.company) {
+              a.company_links = [{
+                name: a.company,
+                team: a.team || [],
+                cell: a.cell || [],
+                reps: a.reps || [],
+                matched_sub_names: a.matched_sub_names || [],
+              }];
+            } else {
+              a.company_links = [];
+            }
+          }
           if (!a.companies) {
-            a.companies = a.company ? [a.company] : [];
+            a.companies = a.company_links.map(function (l) { return l.name; });
           }
           return a;
         });
