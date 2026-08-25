@@ -446,7 +446,15 @@ def main():
                 skipped_irrelevant += 1
                 continue
 
-            if contains_any_keyword(combined_text, global_exclude_keywords):
+            # 2026-08-25 수정: 전역 "증시노이즈 제외" 목록(코스피/코스닥/주가 등)은 원래
+            # 회사명만 겹치고 내용은 전혀 무관한 증권사 리포트성 잡음을 걸러내기 위한 것이었다.
+            # 그런데 company_overrides.json에 context_keywords(업종 관련 키워드)를 설정해둔
+            # 회사는, 이미 그 키워드로 한 번 더 관련성을 확인했기 때문에 성격이 다르다 — 예를
+            # 들어 "성우하이텍, 상반기 영업익 1196억...코스닥 10위"처럼 정상적인 실적 발표
+            # 기사인데 제목에 "코스닥"이 들어갔다는 이유만으로 걸러지는 문제가 있었다.
+            # 그래서 context_keywords가 설정된 회사는 전역 증시노이즈 제외를 적용하지 않는다
+            # (형님 확인 완료, 2026-08-25).
+            if not context_keywords and contains_any_keyword(combined_text, global_exclude_keywords):
                 skipped_stock += 1
                 continue
 
