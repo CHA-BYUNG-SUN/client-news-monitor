@@ -53,6 +53,12 @@ GROUP_HEADERS = {"그룹", "담당자", "group"}
 
 SUFFIX_TOKENS = ["(주)", "㈜", "(유)", "(재)", "(사)", "(합)", "(주 )", "( 주)"]
 
+# 2026-08-25 추가: TSC6은 금형(mold) 담당팀으로, 이 앱이 다루는 "자동화 시장" 영업지원
+# 대상이 아니므로 고객 마스터를 companies.json으로 만들 때부터 아예 제외한다.
+# (같은 고객사가 TSC6 외 다른 팀에도 걸려 있으면 그 팀 소속 정보는 그대로 유지되고,
+# TSC6 소속 행만 제외된다.)
+EXCLUDED_TEAMS = {"TSC6"}
+
 
 def read_rows(path, sheet_name=None):
     """.csv 또는 .xlsx 파일을 읽어 행(tuple) 리스트로 반환합니다.
@@ -132,6 +138,11 @@ def import_master_format(rows, col_idx):
         ext_rep = get_val(row, "ext_rep")
         int_rep = get_val(row, "int_rep")
         industry = get_val(row, "industry")
+
+        if team in EXCLUDED_TEAMS:
+            # 금형(TSC6) 담당 행은 이 앱의 대상이 아니므로 통째로 건너뛴다.
+            # 이 회사의 다른 SUB 행이 TSC6이 아닌 다른 팀이면 그 행은 정상적으로 처리된다.
+            continue
 
         key = (code or "", name)
         if key not in groups:
