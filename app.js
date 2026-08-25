@@ -215,7 +215,7 @@
   function matchesSearch(a, text) {
     if (!text) return true;
     var t = text.toLowerCase();
-    if ((a.company || "").toLowerCase().indexOf(t) !== -1) return true;
+    if ((a.companies || []).some(function (c) { return (c || "").toLowerCase().indexOf(t) !== -1; })) return true;
     if ((a.matched_sub_names || []).some(function (s) { return (s || "").toLowerCase().indexOf(t) !== -1; })) return true;
     if ((a.reps || []).some(function (r) { return (r || "").toLowerCase().indexOf(t) !== -1; })) return true;
     return false;
@@ -298,7 +298,13 @@
     }
     var companySpan = document.createElement("span");
     companySpan.className = "pv-card__company";
-    companySpan.textContent = a.company || "";
+    // 같은 브랜드의 여러 사업장에 동시에 관련된 기사는 대표로 첫 회사명만 보여주고
+    // 나머지는 "외 N곳"으로 축약한다(배지가 너무 길어지는 것 방지).
+    var companyNames = a.companies || [];
+    companySpan.textContent = companyNames.length > 1
+      ? companyNames[0] + " 외 " + (companyNames.length - 1) + "곳"
+      : (companyNames[0] || "");
+    if (companyNames.length > 1) companySpan.title = companyNames.join(", ");
     badges.appendChild(companySpan);
     body.appendChild(badges);
 
@@ -464,7 +470,7 @@
   // 현재 필터(팀/셀/영업명/이슈유형/메이저/검색)에 해당하는 고객사를 전부 보여준다(개수 제한 없음).
   function renderSidePanel(filtered) {
     el.companyList.innerHTML = "";
-    var companies = uniqueSorted(filtered.map(function (a) { return a.company; }));
+    var companies = uniqueSorted(filtered.reduce(function (acc, a) { return acc.concat(a.companies || []); }, []));
 
     el.sideCount.textContent = companies.length ? " (" + companies.length.toLocaleString("ko-KR") + ")" : "";
 
@@ -503,7 +509,7 @@
 
   // ---------- 고객사 핵심 기사 요약 팝업 ----------
   function getCompanyArticles(companyName) {
-    return state.articles.filter(function (a) { return a.company === companyName; });
+    return state.articles.filter(function (a) { return (a.companies || []).indexOf(companyName) !== -1; });
   }
 
   function openCompanyModal(companyName) {
@@ -715,9 +721,11 @@
     var companyMap = {};
     var repMap = {};
     state.articles.forEach(function (a) {
-      if (a.company && !companyMap[a.company]) {
-        companyMap[a.company] = { team: a.team, cell: a.cell, reps: a.reps };
-      }
+      (a.companies || []).forEach(function (c) {
+        if (c && !companyMap[c]) {
+          companyMap[c] = { team: a.team, cell: a.cell, reps: a.reps };
+        }
+      });
       (a.reps || []).forEach(function (rep) {
         if (rep && !repMap[rep]) repMap[rep] = { team: a.team, cell: a.cell };
       });
@@ -974,7 +982,17 @@
         return res.json();
       })
       .then(function (data) {
-        state.articles = data.articles || [];
+        state.articles = (data.articles || []).map(function (a) {
+          // 2026-08-24 변경: fetch_news.py가 기사당 회사를 "company"(단일 문자열) 대신
+          // "companies"(배열)로 내려주도록 바뀜(같은 브랜드의 여러 사업장이 같은 기사에
+          // 동시에 걸리는 경우, 먼저 처리된 사업장만 기사를 독점하지 않고 관련된 모든
+          // 사업장에 표시하기 위함). 혹시 예전 방식(company 단일 문자열)으로 생성된
+          // news.json이 아직 남아있어도 깨지지 않도록 여기서 항상 companies 배열로 맞춰준다.
+          if (!a.companies) {
+            a.companies = a.company ? [a.company] : [];
+          }
+          return a;
+        });
         state.tagOrder = uniqueSorted(state.articles.map(function (a) { return a.tag_label; }));
         state.generatedAt = data.generated_at || null;
         state.lookbackDays = data.lookback_days || null;
