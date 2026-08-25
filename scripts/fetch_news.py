@@ -102,6 +102,49 @@ def normalize_title(title):
     return t.lower()
 
 
+def display_company_name(name):
+    """AI 요약 프롬프트 등 사람/AI가 읽을 곳에 보여줄 '깨끗한' 회사명을 만든다.
+
+    2026-08-25 추가: companies.json의 고객명은 "현대트랜시스(주)_ERP"처럼 내부 시스템
+    표기("_ERP")나 법인 표기("(주)")가 그대로 붙어있는 경우가 많다. 이 원본 문자열을
+    AI 요약 프롬프트에 그대로 넣으면, 실제 기사 제목/본문에는 당연히 "_ERP" 같은 표기가
+    없기 때문에 AI가 "이 기사가 정말 이 고객사 얘기인가?"를 판단할 때 불필요하게 헷갈려
+    할 수 있다. 검색어 정리(clean_query)와 비슷한 방식으로 내부 표기만 걷어내고, 사람이
+    실제로 부르는 이름에 가깝게 만들어서 AI에게 넘긴다."""
+    if not name:
+        return name
+    n = re.sub(r"_ERP$", "", name, flags=re.IGNORECASE)
+    for token in ["(주)", "㈜", "(유)", "(재)", "(사)", "(합)", "주식회사", "유한회사"]:
+        n = n.replace(token, "")
+    n = re.sub(r"[\[\]\(\)]", "", n)
+    n = re.sub(r"\s+", " ", n).strip()
+    return n or name
+
+
+def company_title_hit(article, company_name):
+    """이 기사의 '제목'에 해당 회사 자신의 이름(또는 매칭된 SUB고객명)이 직접 등장하는지 확인.
+
+    2026-08-25 추가: AI 요약(generate_company_summaries)에서 어떤 기사를 상위 N건으로
+    골라 Claude에게 넘길지 정할 때 쓰는 신호다. "회사명이 본문 한 구석에 다른 회사의
+    협력사/고객사로 잠깐 언급된 기사"와 "이 회사 자신이 제목의 주인공인 기사"를 구분하려는
+    목적으로, 후자를 우선한다(둘 다 화면의 "전체 기사 보기" 목록에는 그대로 다 나온다 -
+    이 함수는 AI 요약 재료를 고를 때만 쓰인다)."""
+    title = article.get("title", "")
+    if not title:
+        return False
+    display = display_company_name(company_name)
+    if display and display in title:
+        return True
+    for link in article.get("company_links", []):
+        if link.get("name") == company_name:
+            for sub_name in link.get("matched_sub_names", []):
+                sub_display = display_company_name(sub_name)
+                if sub_display and sub_display in title:
+                    return True
+            break
+    return False
+
+
 def get_domain(url):
     try:
         netloc = urlparse(url).netloc.lower()
@@ -294,6 +337,14 @@ def call_anthropic_summary(prompt, api_key, retries=3):
 
 
 def build_summary_prompt(company_name, articles):
+    # 2026-08-25 수정: 프롬프트에 넘기는 회사명은 "현대트랜시스(주)_ERP"같은 원본 표기 대신
+    # display_company_name()으로 정리한 이름을 쓴다. "_ERP"/"(주)" 같은 내부 시스템 표기가
+    # 실제 기사 본문에는 당연히 등장하지 않는데, 원본 표기를 그대로 프롬프트에 넣으면 AI가
+    # "제목에 나온 이름이 정말 이 고객사를 가리키는 게 맞나?"를 판단하는 데 불필요한 혼란을
+    # 겪을 수 있었다(예: 기사 제목에 분명히 "하이비젼시스템"이라고 나오는데도, 프롬프트에는
+    # "(주)하이비젼시스템_ERP"라고 적혀 있어 같은 대상인지 애매하게 느껴져 "관련 기사 없음"으로
+    # 잘못 판단하는 사례가 있었다).
+    display_name = display_company_name(company_name)
     lines = []
     for a in articles:
         lines.append(
@@ -301,15 +352,20 @@ def build_summary_prompt(company_name, articles):
         )
     articles_text = "\n".join(lines)
     return (
-        f"다음은 '{company_name}'과 관련된 것으로 자동 수집된 최근 기사 목록입니다. "
+        f"다음은 '{display_name}'과 관련된 것으로 자동 수집된 최근 기사 목록입니다. "
+        f"('{display_name}'라는 이름은 고객 관리 시스템에 등록된 회사명에서 '(주)', '_ERP' 같은 내부 표기만 "
+        "정리한 이름이며, 실제 기사에는 이 이름 그대로, 혹은 일부만 등장할 수 있습니다.) "
         "다만 이 기사들은 고객명을 키워드로 검색해서 모은 것이라, 이름이 우연히 겹쳤을 뿐 실제로는 "
         f"이 고객사와 무관하거나 다른 회사/산업 위주로 다뤄진 기사가 섞여 있을 수 있습니다. "
-        f"먼저 이 기사들 중 '{company_name}'의 실제 사업 활동(수주, 투자, 협업, 설비/자동화 도입, 신규 계약, "
-        "공시, 인수합병(M&A), 투자 유치 등)과 직접 관련된 기사만 골라내고, "
-        "이름만 겹쳤거나 다른 회사·산업이 중심인 기사는 무시하세요. "
+        f"먼저 이 기사들 중 '{display_name}'의 실제 사업 활동(수주, 투자, 협업, 설비/자동화 도입, 신규 계약, "
+        "공시, 인수합병(M&A), 투자 유치, 실적/매출 발표 등)과 직접 관련된 기사만 골라내세요. "
+        f"제목의 주인공이 '{display_name}' 자신인 기사는 직접 관련된 기사로 적극 인정하고, "
+        "이름만 겹쳤거나 다른 회사·산업이 중심인 기사(예: 다른 회사 기사에서 협력사/고객사로 잠깐 언급만 된 경우)는 무시하세요. "
         "그렇게 골라낸 기사만으로 한국어 2~3문장의 짧은 요약을 작성해 주세요. "
+        "단 1건이라도 직접 관련된 기사가 있다면 그 기사만으로 요약을 작성해야 하며, 나머지 기사가 무관하다는 이유로 "
+        "전체를 '소식 없음'으로 처리하면 안 됩니다. "
         "영업사원이 이 고객사를 방문하기 전에 빠르게 훑어볼 수 있는 요약이어야 합니다. "
-        "직접 관련된 기사가 하나도 없다면 다른 말 없이 '최근 이 고객사와 직접 관련된 뚜렷한 소식은 없습니다.'라고만 답하세요. "
+        "직접 관련된 기사가 정말 하나도 없을 때만, 다른 말 없이 '최근 이 고객사와 직접 관련된 뚜렷한 소식은 없습니다.'라고만 답하세요. "
         "불필요한 서론이나 인사말 없이 바로 핵심 내용만 문장으로 작성하고, "
         "문장 앞에 번호나 불릿, 따옴표를 붙이지 마세요.\n\n"
         f"{articles_text}"
@@ -318,8 +374,17 @@ def build_summary_prompt(company_name, articles):
 
 def generate_company_summaries(all_articles, api_key, lookback_days=20, max_articles=5, request_delay=0.3):
     """최근 lookback_days일 이내 기사가 있는 고객사만 골라 Claude Haiku로 2~3문장 요약을 생성한다.
-    all_articles는 이미 '우선순위 태그 -> 최신순'으로 정렬돼 있으므로, 고객사별로 그 순서 그대로
-    상위 max_articles건만 골라 요약 재료로 쓴다.
+    all_articles는 이미 '우선순위 태그 -> 최신순'으로 정렬돼 있는데, 이 전역 순서만 그대로 잘라서
+    상위 max_articles건을 쓰면 문제가 생길 수 있다: 예를 들어 "현대트랜시스" 같은 대기업 고객은
+    "디에스엠이 현대트랜시스에 공급한다"처럼 '다른 회사가 주인공이고 이 고객사는 협력사로 잠깐
+    언급'된 [투자] 태그 기사가 우선순위상 앞에 와서 상위 5건을 다 차지해버리고, 실제로 이 고객사
+    "자신"이 제목의 주인공인 기사(예: "현대트랜시스·두산밥캣·LG엔솔 상생기금 출연...")는 정작
+    6번째, 10번째... 뒤로 밀려서 AI 요약 재료에 아예 포함되지 못하는 경우가 있었다(2026-08-25
+    발견 - 화면의 "전체 기사 보기"에는 정상적으로 다 나오는데, AI 요약만 "새 소식 없음"으로
+    나오는 원인 중 하나).
+    그래서 고객사별로 자르기 전에, company_title_hit()로 "이 회사 자신이 제목의 주인공인 기사"를
+    앞으로 오도록 재정렬한 뒤 상위 max_articles건을 뽑는다(같은 우선순위 그룹 내에서는 기존
+    순서 그대로 유지됨 - 정렬이 stable하기 때문).
     반환값은 {고객사명: {"summary": str, "based_on": int, "generated_at": iso}} 형태이며,
     요약 생성에 실패한 고객사는 이 딕셔너리에 포함되지 않는다(웹사이트에서는 "새 소식 없음"과
     구분하기 위해, 이 함수를 호출한 것 자체는 output에 company_summaries 키를 남겨 구분한다)."""
@@ -341,7 +406,10 @@ def generate_company_summaries(all_articles, api_key, lookback_days=20, max_arti
     total = len(by_company)
     print(f"\nAI 요약 생성 대상: {total}개 고객사 (최근 {lookback_days}일 이내 기사 보유)")
     for i, (company_name, articles) in enumerate(by_company.items(), start=1):
-        top_articles = articles[:max_articles]
+        ranked_articles = sorted(
+            articles, key=lambda a: 0 if company_title_hit(a, company_name) else 1
+        )
+        top_articles = ranked_articles[:max_articles]
         prompt = build_summary_prompt(company_name, top_articles)
         print(f"  [{i}/{total}] 요약 생성: {company_name} ({len(top_articles)}건 기준)")
         summary_text = call_anthropic_summary(prompt, api_key)
@@ -374,7 +442,11 @@ def main():
 
     anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY")
     summary_lookback_days = int(os.environ.get("SUMMARY_LOOKBACK_DAYS", "20"))
-    summary_max_articles = int(os.environ.get("SUMMARY_MAX_ARTICLES", "5"))
+    # 2026-08-25 수정: 기존 5건에서 8건으로 상향. company_title_hit() 재정렬로 "회사 자신이
+    # 주인공인 기사"가 앞으로 오게 됐지만, 그런 기사가 여러 건 있는 고객사(예: 보도자료가
+    # 여러 언론사에 살짝 다른 제목으로 실린 경우)는 5건보다 조금 더 여유를 줘야 AI가 판단할
+    # 재료가 충분해진다. Haiku 비용은 미미하게 늘어나는 수준이라 큰 부담은 없다.
+    summary_max_articles = int(os.environ.get("SUMMARY_MAX_ARTICLES", "8"))
     summary_request_delay = float(os.environ.get("SUMMARY_REQUEST_DELAY", "0.3"))
 
     companies_cfg = load_json("companies.json")["companies"]
