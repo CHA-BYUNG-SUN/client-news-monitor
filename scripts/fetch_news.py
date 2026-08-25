@@ -464,7 +464,28 @@ def main():
                 # 나중에 처리되는 사업장이 관련 기사를 하나도 못 가져가는 문제가 있었다.
                 # "companies"(배열)로 바꾸고, 중복으로 판정된 기사는 버리지 않고 관련된
                 # 모든 회사/팀/셀/담당자를 이 배열에 계속 합쳐서 모든 관련 사업장에 표시되게 한다.
+                #
+                # 2026-08-25 추가 수정: 위 방식대로 team/cell/reps를 그냥 하나의 배열에 계속
+                # 합치기만 하면, "이 기사에 관련된 회사가 누구인지"는 알 수 있어도 "그중 어느
+                # 회사가 어느 팀/셀/담당자 소속인지"라는 연결 정보가 사라진다. 예를 들어 배터리
+                # 장비업체 6곳을 한꺼번에 언급하는 산업 동향 기사 하나가 (주)나인테크(TSC3·이인규)
+                # 와 (주)엠오티(TSC4·김훈)에 동시에 걸리면, team=["TSC3","TSC4"],
+                # reps=["이인규","김훈"]처럼 통째로 섞여버려서 "팀 필터로 TSC4를 고르면 관련
+                # 없는 이인규까지 영업명 목록에 나오는" 문제, "김훈을 검색하면 김훈과 무관한
+                # 나인테크까지 담당 고객 목록에 나오는" 문제가 생겼다. 이를 막기 위해 회사별
+                # 연결 정보를 "company_links" 배열에 별도로 보존한다: 각 원소가
+                # {name, team, cell, reps, matched_sub_names}로, 어느 회사가 어느 팀/셀/
+                # 담당자에 속하는지 끝까지 유지한다. 화면에서 정확한 필터링·검색·고객사별 팝업은
+                # 이 company_links를 기준으로 하고, 아래 team/cell/reps/matched_sub_names(전체
+                # 배열)는 피드 카드에 보여주는 "요약 정보"용으로만 남겨둔다.
                 "companies": [name],
+                "company_links": [{
+                    "name": name,
+                    "matched_sub_names": list(matched_sub_names),
+                    "team": list(team),
+                    "cell": list(cell),
+                    "reps": list(reps),
+                }],
                 "matched_sub_names": list(matched_sub_names),
                 "team": list(team),
                 "cell": list(cell),
@@ -487,9 +508,37 @@ def main():
             dup = is_duplicate(article, seen_articles)
             if dup:
                 skipped_dup += 1
-                # 같은 기사가 다른 회사(주로 같은 브랜드의 다른 사업장)에서도 검색된 경우,
-                # 그냥 버리지 않고 이 회사/팀/셀/담당자/관련 SUB고객명을 기존 기사에 합쳐서
-                # 모든 관련 사업장의 목록·필터·요약에 빠짐없이 반영되게 한다.
+                # 같은 기사가 다른 회사(주로 같은 브랜드의 다른 사업장, 또는 여러 고객사가
+                # 함께 언급된 산업 동향 기사)에서도 검색된 경우, 그냥 버리지 않고 이 회사를
+                # company_links에 별도 항목으로 추가한다(회사별 팀/셀/담당자 연결 유지).
+                # 화면에 보여줄 "요약용" team/cell/reps/matched_sub_names 배열에도 합쳐 두지만,
+                # 실제 필터링·검색·고객사 팝업은 company_links를 기준으로 동작한다.
+                existing_link = None
+                for link in dup["company_links"]:
+                    if link["name"] == name:
+                        existing_link = link
+                        break
+                if existing_link:
+                    for sn in matched_sub_names:
+                        if sn not in existing_link["matched_sub_names"]:
+                            existing_link["matched_sub_names"].append(sn)
+                    for t in team:
+                        if t not in existing_link["team"]:
+                            existing_link["team"].append(t)
+                    for c in cell:
+                        if c not in existing_link["cell"]:
+                            existing_link["cell"].append(c)
+                    for r in reps:
+                        if r not in existing_link["reps"]:
+                            existing_link["reps"].append(r)
+                else:
+                    dup["company_links"].append({
+                        "name": name,
+                        "matched_sub_names": list(matched_sub_names),
+                        "team": list(team),
+                        "cell": list(cell),
+                        "reps": list(reps),
+                    })
                 if name not in dup["companies"]:
                     dup["companies"].append(name)
                 for t in team:
@@ -508,6 +557,7 @@ def main():
                 # 메이저 기사로 교체하되, 지금까지 합쳐둔 회사/팀/셀/담당자 정보는 유지한다.
                 if is_major and not dup["major"]:
                     article["companies"] = dup["companies"]
+                    article["company_links"] = dup["company_links"]
                     article["team"] = dup["team"]
                     article["cell"] = dup["cell"]
                     article["reps"] = dup["reps"]
