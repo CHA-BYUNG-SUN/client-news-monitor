@@ -498,17 +498,45 @@
   // 2026-08-25 수정: 필터가 걸려 있을 때는 기사에 걸린 회사 전체가 아니라, 그 필터 조건에
   // "실제로 부합하는" 회사만 골라서 보여준다(예: "김훈" 검색 시 그 기사에 같이 언급된
   // 다른 담당자의 회사까지 나오지 않도록).
+  //
+  // 2026-09-07 수정: 목록을 회사 "이름"이 아니라 company_links의 "code"(고유 고객번호)
+  // 기준으로 구분한다. companies.json에는 이름은 완전히 같은데 실제로는 서로 다른 회사가
+  // 5쌍 있어(예: 제닉스(주) - TSC2·ME03·김혁 / TSC3·ME06·이인규), 이름만으로 목록을 만들면
+  // 이 둘이 한 줄로 합쳐져 보여서 팀/셀 필터와 무관한 담당자가 같이 노출되는 문제가 있었다.
+  // 같은 이름을 쓰는 서로 다른 코드가 있을 때만 "이름 (팀·담당자)" 형태로 구분 표시한다.
   function renderSidePanel(filtered) {
     el.companyList.innerHTML = "";
     var linkFilterActive = hasLinkLevelFilters();
-    var companies = uniqueSorted(filtered.reduce(function (acc, a) {
+    var linksByCode = {};
+    filtered.forEach(function (a) {
       var links = linkFilterActive ? getMatchingLinks(a) : (a.company_links || []);
-      return acc.concat(links.map(function (l) { return l.name; }));
-    }, []));
+      links.forEach(function (l) {
+        // 구버전 news.json(코드 없음) 대비: code가 없으면 이름을 임시 키로 쓴다.
+        var code = l.code || l.name;
+        if (code && !linksByCode[code]) linksByCode[code] = l;
+      });
+    });
 
-    el.sideCount.textContent = companies.length ? " (" + companies.length.toLocaleString("ko-KR") + ")" : "";
+    var codes = Object.keys(linksByCode);
+    var nameCounts = {};
+    codes.forEach(function (code) {
+      var n = linksByCode[code].name;
+      nameCounts[n] = (nameCounts[n] || 0) + 1;
+    });
 
-    if (!companies.length) {
+    var items = codes.map(function (code) {
+      var l = linksByCode[code];
+      var label = l.name;
+      if (nameCounts[l.name] > 1) {
+        var meta = [].concat(l.team || [], (l.reps || []).slice(0, 1)).filter(Boolean).join("·");
+        if (meta) label = l.name + " (" + meta + ")";
+      }
+      return { code: code, name: l.name, label: label };
+    }).sort(function (a, b) { return a.label.localeCompare(b.label, "ko"); });
+
+    el.sideCount.textContent = items.length ? " (" + items.length.toLocaleString("ko-KR") + ")" : "";
+
+    if (!items.length) {
       var empty = document.createElement("p");
       empty.className = "pv-company-modal__empty";
       empty.style.padding = "4px 2px";
@@ -517,12 +545,12 @@
       return;
     }
 
-    companies.forEach(function (name) {
-      el.companyList.appendChild(buildCompanyItem(name, iconInitials(name)));
+    items.forEach(function (item) {
+      el.companyList.appendChild(buildCompanyItem(item.code, item.name, item.label, iconInitials(item.name)));
     });
   }
 
-  function buildCompanyItem(label, iconText) {
+  function buildCompanyItem(code, name, label, iconText) {
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "pv-company-item";
@@ -536,18 +564,22 @@
     btn.appendChild(span);
     btn.addEventListener("click", function () {
       closeSide();
-      openCompanyModal(label);
+      openCompanyModal(code, name, label);
     });
     return btn;
   }
 
   // ---------- 고객사 핵심 기사 요약 팝업 ----------
-  function getCompanyArticles(companyName) {
-    return state.articles.filter(function (a) { return (a.companies || []).indexOf(companyName) !== -1; });
+  // 2026-09-07 수정: 이름이 아니라 code(고유 고객번호)로 기사를 찾는다 - 이유는
+  // renderSidePanel 주석 참고.
+  function getCompanyArticlesByCode(code) {
+    return state.articles.filter(function (a) {
+      return (a.company_links || []).some(function (l) { return (l.code || l.name) === code; });
+    });
   }
 
-  function openCompanyModal(companyName) {
-    renderCompanyModal(companyName, getCompanyArticles(companyName));
+  function openCompanyModal(code, name, label) {
+    renderCompanyModal(code, name, label, getCompanyArticlesByCode(code));
     el.companyModalBackdrop.hidden = false;
     el.companyModal.hidden = false;
   }
@@ -564,15 +596,21 @@
     return ms / 86400000;
   }
 
-  function renderCompanyModal(companyName, articles) {
-    el.companyModalTitle.textContent = companyName;
+  // 2026-09-07 수정: companyName(이름) 대신 code(고유 고객번호)로 이 고객사 자신의
+  // company_links 항목과 AI 요약을 찾는다 - 이유는 renderSidePanel 주석 참고. label은
+  // 화면에 보여줄 제목(동명이사인 경우 "이름 (팀·담당자)" 형태), name은 검색/프롬프트용
+  // 원본 이름이다.
+  function renderCompanyModal(code, name, label, articles) {
+    el.companyModalTitle.textContent = label;
+    el.companyModalTitle.dataset.code = code;
+    el.companyModalTitle.dataset.name = name;
     el.companyModalBody.innerHTML = "";
 
     var first = articles[0];
     // 2026-08-25 수정: 여러 회사가 함께 걸린 기사(first)의 team/cell/reps를 그냥 통째로
     // 쓰면 이 고객사와 무관한 다른 회사의 팀/담당자가 같이 표시될 수 있다. 이 고객사
-    // (companyName) 자신의 company_links 항목만 골라서 메타 정보를 만든다.
-    var firstLink = first ? (first.company_links || []).filter(function (l) { return l.name === companyName; })[0] : null;
+    // (code) 자신의 company_links 항목만 골라서 메타 정보를 만든다.
+    var firstLink = first ? (first.company_links || []).filter(function (l) { return (l.code || l.name) === code; })[0] : null;
     var baseMetaParts = firstLink ? [].concat(firstLink.team || [], firstLink.cell || [], firstLink.reps || []).filter(Boolean) : [];
 
     // company_summaries가 news.json에 아예 없으면(구버전 데이터 / 이번 회차에 AI 요약을 안 돌린 날)
@@ -582,7 +620,7 @@
       return;
     }
 
-    var entry = state.companySummaries[companyName];
+    var entry = state.companySummaries[code];
     var days = state.summaryLookbackDays || 20;
     // fetch_news.py가 "고객명은 겹쳤지만 실제로는 무관한 기사뿐"이라고 AI가 스스로 판단했을 때
     // 돌려주는 안내 문장. 이 경우엔 AI 요약 박스나 참고 기사 목록 없이, 새 소식 없음과 같은
@@ -984,7 +1022,9 @@
     if (e.key === "Escape" && !el.companyModal.hidden) closeCompanyModal();
   });
   el.companyModalViewAllBtn.addEventListener("click", function () {
-    var name = el.companyModalTitle.textContent;
+    // 2026-09-07 수정: 제목(label)은 동명이사인 경우 "이름 (팀·담당자)"가 붙어 있어 그대로
+    // 검색하면 실제 기사와 매칭이 안 된다. 검색에는 항상 원본 회사명(dataset.name)을 쓴다.
+    var name = el.companyModalTitle.dataset.name || el.companyModalTitle.textContent;
     closeCompanyModal();
     state.searchText = name;
     el.searchInput.value = name;
