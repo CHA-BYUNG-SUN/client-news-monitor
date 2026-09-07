@@ -121,14 +121,19 @@ def display_company_name(name):
     return n or name
 
 
-def company_title_hit(article, company_name):
+def company_title_hit(article, code, company_name):
     """이 기사의 '제목'에 해당 회사 자신의 이름(또는 매칭된 SUB고객명)이 직접 등장하는지 확인.
 
     2026-08-25 추가: AI 요약(generate_company_summaries)에서 어떤 기사를 상위 N건으로
     골라 Claude에게 넘길지 정할 때 쓰는 신호다. "회사명이 본문 한 구석에 다른 회사의
     협력사/고객사로 잠깐 언급된 기사"와 "이 회사 자신이 제목의 주인공인 기사"를 구분하려는
     목적으로, 후자를 우선한다(둘 다 화면의 "전체 기사 보기" 목록에는 그대로 다 나온다 -
-    이 함수는 AI 요약 재료를 고를 때만 쓰인다)."""
+    이 함수는 AI 요약 재료를 고를 때만 쓰인다).
+
+    2026-09-07 수정: company_links 매칭 기준을 이름(name)에서 고유 코드(code)로 변경.
+    companies.json에는 이름은 완전히 같은데 실제로는 서로 다른 회사인 경우가 5쌍
+    있는데(예: 제닉스(주) - 코드 981241(TSC2·김혁)과 코드 955240(TSC3·이인규)), 이름으로
+    매칭하면 두 회사의 matched_sub_names가 뒤섞여 엉뚱한 회사 판단에 영향을 줄 수 있었다."""
     title = article.get("title", "")
     if not title:
         return False
@@ -136,7 +141,7 @@ def company_title_hit(article, company_name):
     if display and display in title:
         return True
     for link in article.get("company_links", []):
-        if link.get("name") == company_name:
+        if link.get("code") == code:
             for sub_name in link.get("matched_sub_names", []):
                 sub_display = display_company_name(sub_name)
                 if sub_display and sub_display in title:
@@ -385,11 +390,17 @@ def generate_company_summaries(all_articles, api_key, lookback_days=20, max_arti
     그래서 고객사별로 자르기 전에, company_title_hit()로 "이 회사 자신이 제목의 주인공인 기사"를
     앞으로 오도록 재정렬한 뒤 상위 max_articles건을 뽑는다(같은 우선순위 그룹 내에서는 기존
     순서 그대로 유지됨 - 정렬이 stable하기 때문).
-    반환값은 {고객사명: {"summary": str, "based_on": int, "generated_at": iso}} 형태이며,
+    반환값은 {고객코드: {"summary": str, "based_on": int, "generated_at": iso}} 형태이며,
     요약 생성에 실패한 고객사는 이 딕셔너리에 포함되지 않는다(웹사이트에서는 "새 소식 없음"과
-    구분하기 위해, 이 함수를 호출한 것 자체는 output에 company_summaries 키를 남겨 구분한다)."""
+    구분하기 위해, 이 함수를 호출한 것 자체는 output에 company_summaries 키를 남겨 구분한다).
+
+    2026-09-07 수정: 그룹핑 기준을 회사 "이름"에서 company_links의 "code"(고유 고객번호)로
+    변경. companies.json에는 이름은 같지만 실제로는 서로 다른 회사가 5쌍 있어(예: 제닉스(주)
+    2곳), 이름으로 그룹핑하면 서로 무관한 두 회사의 기사가 하나의 AI 요약 재료로 섞이는
+    문제가 있었다(형님 제보로 확인)."""
     cutoff = datetime.now(KST) - timedelta(days=lookback_days)
-    by_company = {}
+    by_company = {}  # code -> articles
+    company_names = {}  # code -> companies.json 원본 표기 이름 (프롬프트 생성용)
     for a in all_articles:
         try:
             pub_dt = datetime.fromisoformat(a["pubDate_iso"])
@@ -397,24 +408,30 @@ def generate_company_summaries(all_articles, api_key, lookback_days=20, max_arti
             continue
         if pub_dt < cutoff:
             continue
-        # 기사 하나가 여러 회사(같은 브랜드의 여러 사업장)에 동시에 관련된 경우,
-        # 관련된 모든 회사의 요약 재료 목록에 포함시킨다.
-        for company_name in a.get("companies", []):
-            by_company.setdefault(company_name, []).append(a)
+        # 기사 하나가 여러 회사(같은 브랜드의 여러 사업장, 또는 이름은 같지만 코드가 다른
+        # 별개 회사)에 동시에 관련된 경우, company_links를 기준으로 관련된 모든 회사 각각의
+        # 요약 재료 목록에 포함시킨다.
+        for link in a.get("company_links", []):
+            code = link.get("code")
+            if not code:
+                continue
+            by_company.setdefault(code, []).append(a)
+            company_names.setdefault(code, link.get("name"))
 
     summaries = {}
     total = len(by_company)
     print(f"\nAI 요약 생성 대상: {total}개 고객사 (최근 {lookback_days}일 이내 기사 보유)")
-    for i, (company_name, articles) in enumerate(by_company.items(), start=1):
+    for i, (code, articles) in enumerate(by_company.items(), start=1):
+        company_name = company_names.get(code, code)
         ranked_articles = sorted(
-            articles, key=lambda a: 0 if company_title_hit(a, company_name) else 1
+            articles, key=lambda a: 0 if company_title_hit(a, code, company_name) else 1
         )
         top_articles = ranked_articles[:max_articles]
         prompt = build_summary_prompt(company_name, top_articles)
-        print(f"  [{i}/{total}] 요약 생성: {company_name} ({len(top_articles)}건 기준)")
+        print(f"  [{i}/{total}] 요약 생성: {company_name} (code={code}, {len(top_articles)}건 기준)")
         summary_text = call_anthropic_summary(prompt, api_key)
         if summary_text:
-            summaries[company_name] = {
+            summaries[code] = {
                 "summary": summary_text,
                 "based_on": len(top_articles),
                 "generated_at": datetime.now(KST).isoformat(),
@@ -560,6 +577,7 @@ def main():
                 # 배열)는 피드 카드에 보여주는 "요약 정보"용으로만 남겨둔다.
                 "companies": [name],
                 "company_links": [{
+                    "code": code,
                     "name": name,
                     "matched_sub_names": list(matched_sub_names),
                     "team": list(team),
@@ -593,9 +611,17 @@ def main():
                 # company_links에 별도 항목으로 추가한다(회사별 팀/셀/담당자 연결 유지).
                 # 화면에 보여줄 "요약용" team/cell/reps/matched_sub_names 배열에도 합쳐 두지만,
                 # 실제 필터링·검색·고객사 팝업은 company_links를 기준으로 동작한다.
+                #
+                # 2026-09-07 수정: 병합 판단 기준을 이름(name)에서 고유 코드(code)로 변경.
+                # companies.json에는 이름은 완전히 같은데 실제로는 서로 다른 회사(고객번호가
+                # 다름)인 경우가 5쌍 있다(예: "제닉스(주)" 코드 981241(TSC2·ME03·김혁)과 코드
+                # 955240(TSC3·ME06·이인규)). 이름으로 매칭하면 이 둘이 하나의 company_links
+                # 항목으로 합쳐져 team=[TSC2,TSC3]/cell=[ME03,ME06]/reps=[김혁,이인규]처럼
+                # 섞여버리는 문제가 있었다 — 예를 들어 셀=ME03으로 필터링해도 무관한 이인규가
+                # 영업명 드롭다운에 같이 나오는 원인이었다(형님 제보, 2026-09-07 확인).
                 existing_link = None
                 for link in dup["company_links"]:
-                    if link["name"] == name:
+                    if link.get("code") == code:
                         existing_link = link
                         break
                 if existing_link:
@@ -613,6 +639,7 @@ def main():
                             existing_link["reps"].append(r)
                 else:
                     dup["company_links"].append({
+                        "code": code,
                         "name": name,
                         "matched_sub_names": list(matched_sub_names),
                         "team": list(team),
