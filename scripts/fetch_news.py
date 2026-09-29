@@ -15,6 +15,9 @@
    - search_queries: 기본 정리된 이름 대신 더 구체적인 별칭 여러 개로 검색/매칭
    - context_keywords: 이 키워드 중 하나가 함께 있어야만 채택 (업종 관련성 확인)
    - exclude_keywords: 이 키워드 중 하나라도 있으면 무조건 제외 (엉뚱한 동음이의어 기사 배제, 회사별)
+   - match_names: 기사 제목/요약에 이 이름 중 하나가 있어야 채택 (없으면 search_queries 사용)
+   - strict_name: true 면 이름 앞뒤가 단어 경계일 때만 인정 (짧은 이름 오탐 방지)
+   - context_window: 숫자(글자 수). 이름이 요약에만 있을 때 context_keywords 가 그 이름 근처에 있어야 인정
 8. config/global_exclude_keywords.json 에 등록된 키워드가 제목/본문에 하나라도 있으면
    고객사와 상관없이 전체 공통으로 기사를 제외함 (예: 주가/증시 등 증권사 리포트성 노이즈 기사)
 9. data/news.json 으로 결과 저장 (GitHub Pages 정적 사이트에서 fetch 하여 사용)
@@ -191,7 +194,65 @@ def resolve_tag(title, description, keyword_config):
 LIST_SEPARATORS = [",", "·", "、", "ㆍ", "/"]
 
 
-def is_relevant_article(title, description, query):
+# 2026-09-29 추가: 짧은 고객명(열성/창성/노바/일진 등)이 다른 단어 속 글자로 잡히는 문제 대응.
+# strict_name 이 켜진 회사는 이름 앞뒤가 "단어 경계"일 때만 이름이 나온 것으로 본다.
+#   - 앞: 한글/영문/숫자가 바로 붙어 있으면 안 됨 (예: 발열성, 하나금융티아이 -> 제외)
+#   - 뒤: 영문/숫자가 붙으면 안 되고, 한글이 붙으면 조사일 때만 허용
+#         (예: 테스는/창성의 -> 인정, 테스트/동도금/넥사다이내믹스 -> 제외)
+_JOSA = ("으로", "에서", "에게", "까지", "부터", "은", "는", "이", "가", "을", "를", "의",
+         "에", "와", "과", "도", "로", "만", "측")
+_HANGUL = re.compile(r"[가-힣]")
+_WORDCH = re.compile(r"[가-힣A-Za-z0-9]")
+
+
+def find_name(text_l, q, strict=False):
+    """text_l(소문자) 안에서 q가 처음 '제대로' 등장하는 위치. 없으면 -1."""
+    start = 0
+    while True:
+        idx = text_l.find(q, start)
+        if idx < 0 or not strict:
+            return idx
+        prev = text_l[idx - 1] if idx > 0 else ""
+        rest = text_l[idx + len(q):]
+        nxt = rest[:1]
+        ok_prev = not (prev and _WORDCH.match(prev))
+        if not nxt or not _WORDCH.match(nxt):
+            ok_next = True
+        elif _HANGUL.match(nxt):
+            ok_next = rest.startswith(_JOSA)
+        else:
+            ok_next = False
+        if ok_prev and ok_next:
+            return idx
+        start = idx + 1
+
+
+def context_near_name(title, description, names, strict, keywords, window):
+    """2026-09-29 추가(context_window 옵션). 이름이 제목에 있으면 제목+요약 어디든 키워드가
+    있으면 통과. 이름이 요약에만 있으면, 이름 앞뒤 window 글자 안에 키워드가 있어야 통과.
+    (예: 요약 끝에 '열성 팬'이 스치듯 나오고 앞쪽에 '공장'이 있는 기사 -> 제외)"""
+    t_l, d_l = (title or "").lower(), (description or "").lower()
+    kws = [k.lower() for k in keywords]
+    for nm in names:
+        q = nm.strip().lower()
+        if q and find_name(t_l, q, strict) >= 0:
+            return any(k in t_l or k in d_l for k in kws)
+    for nm in names:
+        q = nm.strip().lower()
+        start = 0
+        while q:
+            idx = find_name(d_l[start:], q, strict)
+            if idx < 0:
+                break
+            idx += start
+            seg = d_l[max(0, idx - window): idx + len(q) + window]
+            if any(k in seg for k in kws):
+                return True
+            start = idx + 1
+    return False
+
+
+def is_relevant_article(title, description, query, strict=False):
     """검색어(고객명/별칭)가 기사에서 실질적으로 다뤄지는 기사인지 확인.
 
     네이버 뉴스 검색은 기사 원문 전체를 기준으로 검색어를 찾아 결과에 포함시키기 때문에,
@@ -215,14 +276,15 @@ def is_relevant_article(title, description, query):
     title_l = title.lower()
     desc_l = desc.lower()
 
-    if q not in title_l and q not in desc_l:
+    t_idx = find_name(title_l, q, strict)
+    idx = find_name(desc_l, q, strict)
+    if t_idx < 0 and idx < 0:
         # 요약문 어디에도 고객명이 없다 -> 다른 회사 위주 기사일 가능성이 높으므로 제외
         return False
 
-    if q in title_l:
+    if t_idx >= 0:
         return True
 
-    idx = desc_l.find(q)
     start = max(0, idx - 20)
     end = min(len(desc), idx + len(q) + 20)
     window = desc[start:end]
@@ -496,6 +558,12 @@ def main():
             search_queries = override["search_queries"]
         else:
             search_queries = [query]
+        # 2026-09-29 추가: "검색할 말"과 "기사에 꼭 있어야 하는 이름"을 분리.
+        # 예) 검색은 "현대차 자동화"로, 기사 판정은 "현대차"/"현대자동차"가 있는지로.
+        # match_names 가 없으면 예전처럼 search_queries 를 그대로 쓴다.
+        match_names = (override.get("match_names") if override else None) or search_queries
+        strict_name = bool(override.get("strict_name")) if override else False
+        context_window = int(override.get("context_window") or 0) if override else 0
         context_keywords = override.get("context_keywords") if override else None
         exclude_keywords = override.get("exclude_keywords") if override else None
 
@@ -523,11 +591,16 @@ def main():
             description = clean_text(item.get("description", ""))
             combined_text = f"{title} {description}"
 
-            if not any(is_relevant_article(title, description, sq) for sq in search_queries):
+            if not any(is_relevant_article(title, description, mn, strict_name) for mn in match_names):
                 skipped_irrelevant += 1
                 continue
 
             if context_keywords and not contains_any_keyword(combined_text, context_keywords):
+                skipped_irrelevant += 1
+                continue
+
+            if context_keywords and context_window and not context_near_name(
+                    title, description, match_names, strict_name, context_keywords, context_window):
                 skipped_irrelevant += 1
                 continue
 
