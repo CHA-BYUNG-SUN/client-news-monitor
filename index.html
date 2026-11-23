@@ -3,108 +3,107 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-<title>고객 관련 최신기사 · MISUMI</title>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" />
-<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<title>고객 관련 최신기사</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-x" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 14 14"><path d="M7 1.5 8.3 5.7 12.5 7 8.3 8.3 7 12.5 5.7 8.3 1.5 7 5.7 5.7z" fill="currentColor"/></symbol>
+  <symbol id="i-panel" viewBox="0 0 18 18"><g fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="14" height="12" rx="2.5"/><path d="M7 3v12"/></g></symbol>
+  <symbol id="i-home" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5 8 3l5.5 4.5"/><path d="M4 6.5v6.5h3v-3.2h2V13h3V6.5"/></g></symbol>
+  <symbol id="i-out" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3H13v3.5M13 3 7.5 8.5"/><path d="M11.5 9.5V12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1h2.5"/></g></symbol>
+</svg>
+
 <div class="pv-app">
 
   <header class="pv-header">
     <div class="pv-header__top">
       <div class="pv-brand">
         <button type="button" id="pvSideToggleBtn" class="pv-side-toggle-btn" aria-label="담당 고객 목록 열기" aria-expanded="false" aria-controls="pvSide">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <svg width="18" height="18" aria-hidden="true" focusable="false"><use href="#i-panel"/></svg>
         </button>
-        <img src="assets/logo/misumi-logo-official-transparent.png" alt="MISUMI 로고" class="pv-logo" />
-        <h1 class="pv-title">고객 관련 최신기사</h1>
+        <div class="nw-title">
+          <h1 class="pv-title">고객 관련 최신기사</h1>
+          <span class="nw-title-sub">담당 고객사 기사를 매일 모아 보여 드립니다</span>
+        </div>
       </div>
       <div class="pv-header__actions">
-        <a class="hub-home-btn" href="https://misumi-sales-hub.pages.dev/" aria-label="한국미스미 영업 허브로 이동">
-          <svg class="hub-home-btn__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 11.5 12 4l9 7.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5V19a1 1 0 0 0 1 1H9.5a1 1 0 0 0 1-1v-3.5a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1V19a1 1 0 0 0 1 1H17.5a1 1 0 0 0 1-1v-8.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span class="hub-home-btn__label">영업 허브</span>
-        </a>
         <div class="pv-status-block">
+          <p class="pv-counts" id="pvCounts"></p>
           <p class="pv-status" id="pvStatus" role="status" aria-live="polite">
             <span class="pv-status__dot" id="pvStatusDot"></span>
-            <span id="pvStatusText">업데이트 정보 확인 중…</span>
+            <span id="pvStatusText">업데이트 정보 확인 중</span>
           </p>
-          <p class="pv-counts" id="pvCounts"></p>
         </div>
+        <a class="nw-head-link" href="https://misumi-sales-hub.pages.dev/#qna-news" target="_blank" rel="noopener noreferrer">Q&amp;A</a>
+        <a class="nw-head-link" href="https://misumi-sales-hub.pages.dev/#req-news" target="_blank" rel="noopener noreferrer">툴 개수 의뢰</a>
+        <a class="hub-home-btn" href="https://misumi-sales-hub.pages.dev/" aria-label="한국미스미 영업 허브로 이동">
+          <svg class="hub-home-btn__icon" width="16" height="16" aria-hidden="true" focusable="false"><use href="#i-home"/></svg>
+          <span class="hub-home-btn__label">영업 허브</span>
+        </a>
       </div>
     </div>
 
-    <div class="pv-search-wrap">
-      <svg class="pv-search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      <input type="search" id="pvSearchInput" class="pv-search-input" placeholder="담당자 또는 고객사를 검색하세요" autocomplete="off" aria-label="담당자 또는 고객사 검색" />
-      <div id="pvAutocomplete" class="pv-autocomplete" hidden role="listbox"></div>
-    </div>
-
-    <div class="pv-filter-row" id="pvFilterRow">
-      <label class="sr-only" for="pvTeamSelect">팀</label>
-      <select id="pvTeamSelect" class="pv-chip-select"></select>
-      <label class="sr-only" for="pvCellSelect">셀</label>
-      <select id="pvCellSelect" class="pv-chip-select"></select>
-      <label class="sr-only" for="pvRepSelect">영업명</label>
-      <select id="pvRepSelect" class="pv-chip-select"></select>
-      <button type="button" id="pvResetBtn" class="pv-reset-link">필터 전체 해제</button>
-    </div>
-
-    <div class="pv-secondary-panel" id="pvSecondaryPanel">
-      <div class="pv-secondary-panel__handle" id="pvSheetHandle" aria-hidden="true"></div>
-      <div class="pv-secondary-panel__header">
-        <span>이슈 유형 · 메이저 언론사</span>
-        <button type="button" id="pvSheetCloseBtn" class="pv-sheet-close" aria-label="닫기">✕</button>
-      </div>
-      <div class="pv-secondary-panel__body">
-        <div class="pv-sheet-group">
-          <span class="pv-sheet-label">이슈 유형</span>
-          <div id="pvTagChips" class="pv-chip-row"></div>
+    <div class="nw-filter-card">
+      <div class="nw-filter-top">
+        <div class="pv-search-wrap">
+          <svg class="pv-search-icon" viewBox="0 0 16 16" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14" stroke-linecap="round"/></g></svg>
+          <input type="search" id="pvSearchInput" class="pv-search-input" placeholder="담당자 또는 고객사를 검색하세요" autocomplete="off" aria-label="담당자 또는 고객사 검색" />
+          <div id="pvAutocomplete" class="pv-autocomplete" hidden role="listbox"></div>
         </div>
-        <label class="pv-major-toggle">
-          <input type="checkbox" id="pvMajorOnly" /> 메이저 언론사만 보기
-        </label>
-        <button type="button" id="pvSheetResetBtn" class="pv-panel-reset-link">필터 전체 해제</button>
+        <div class="pv-filter-row" id="pvFilterRow">
+          <label class="sr-only" for="pvTeamSelect">팀</label>
+          <select id="pvTeamSelect" class="pv-chip-select"></select>
+          <label class="sr-only" for="pvCellSelect">셀</label>
+          <select id="pvCellSelect" class="pv-chip-select"></select>
+          <label class="sr-only" for="pvRepSelect">영업명</label>
+          <select id="pvRepSelect" class="pv-chip-select"></select>
+          <label class="pv-major-toggle"><input type="checkbox" id="pvMajorOnly" /> 메이저 언론사만 보기</label>
+          <button type="button" id="pvResetBtn" class="pv-reset-link">필터 전체 해제</button>
+        </div>
       </div>
     </div>
   </header>
 
   <main class="pv-main">
     <aside class="pv-side" id="pvSide" aria-label="담당 고객 목록">
+      <div class="nw-rail-brand">
+        <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="6" fill="#008254"/><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6.5" width="12" height="11" rx="1.5"/><path d="M8.5 9.5h7M8.5 12h7M8.5 14.5h4"/></g></svg>
+        <b>고객 관련 최신기사</b>
+      </div>
       <div class="pv-side__head">
         <h2 class="pv-side__title">담당 고객<span class="pv-side__count" id="pvSideCount"></span></h2>
-        <button type="button" id="pvSideCloseBtn" class="pv-side-close" aria-label="목록 닫기">✕</button>
+        <button type="button" id="pvSideCloseBtn" class="pv-side-close" aria-label="목록 닫기"><svg width="16" height="16" aria-hidden="true" focusable="false"><use href="#i-x"/></svg></button>
       </div>
       <div id="pvCompanyList" class="pv-company-list"></div>
+      <div class="nw-rail-foot"><p>고객사를 누르면 최근 기사 AI 요약이 열립니다</p></div>
     </aside>
 
     <section class="pv-feed">
-      <h2 class="pv-feed__title" id="pvFeedTitle">고객 실시간 이슈</h2>
+      <div class="nw-feed-h">
+        <h2 class="pv-feed__title" id="pvFeedTitle">고객 실시간 이슈</h2>
+        <p>기사를 누르면 원문이 새 창으로 열립니다</p>
+      </div>
       <div id="pvArticleList" class="pv-article-list" aria-live="polite"></div>
-      <p id="pvEmptyState" class="pv-empty" hidden></p>
-      <p id="pvErrorState" class="pv-error" hidden></p>
+      <div id="pvEmptyState" class="pv-empty" hidden></div>
+      <div id="pvErrorState" class="pv-error" hidden></div>
       <div class="pv-load-more-wrap">
-        <button type="button" id="pvLoadMoreBtn" class="pv-load-more-btn" hidden>더보기</button>
+        <button type="button" id="pvLoadMoreBtn" class="pv-load-more-btn" hidden>기사 더 보기</button>
       </div>
     </section>
   </main>
 
 </div>
 
-<div class="pv-sheet-backdrop" id="pvSheetBackdrop" hidden></div>
-
 <div class="pv-side-backdrop" id="pvSideBackdrop" hidden></div>
-
-<div class="pv-bottom-bar" id="pvBottomBar">
-  <button type="button" id="pvOpenSheetBtn" class="pv-bottom-filter-btn">
-    필터 <span id="pvFilterCountBadge" class="pv-badge" hidden>0</span>
-  </button>
-</div>
 
 <button type="button" id="pvTopBtn" class="pv-top-btn" aria-label="맨 위로 이동" hidden>
   <svg viewBox="0 0 24 24" aria-hidden="true" class="pv-top-btn__arrow"><path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  <span class="pv-top-btn__label">TOP</span>
+  <span class="pv-top-btn__label">맨 위로</span>
 </button>
 
 <div class="pv-company-modal-backdrop" id="pvCompanyModalBackdrop" hidden></div>
@@ -115,7 +114,7 @@
       <h3 id="pvCompanyModalTitle" class="pv-company-modal__title"></h3>
       <p id="pvCompanyModalMeta" class="pv-company-modal__meta"></p>
     </div>
-    <button type="button" id="pvCompanyModalCloseBtn" class="pv-company-modal__close" aria-label="닫기">✕</button>
+    <button type="button" id="pvCompanyModalCloseBtn" class="pv-company-modal__close" aria-label="닫기"><svg width="16" height="16" aria-hidden="true" focusable="false"><use href="#i-x"/></svg></button>
   </div>
   <div id="pvCompanyModalBody" class="pv-company-modal__body"></div>
   <div class="pv-company-modal__footer">
