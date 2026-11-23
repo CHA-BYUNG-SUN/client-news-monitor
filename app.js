@@ -1134,6 +1134,7 @@
         buildFilterOptions();
         renderStatus();
         render({ freshRender: true });
+        openFromHash();
       })
       .catch(function (err) {
         state.loadError = err;
@@ -1148,6 +1149,22 @@
         console.error(err);
       });
   }
+
+  // ---------- (2026-11-23) 영업 허브 고객대시보드에서 #c=<고객코드> 로 열면 그 고객 AI 요약 서랍을 연다 ----------
+  function openFromHash() {
+    var m = /(?:^#|&)c=([^&]+)/.exec(location.hash);
+    if (!m || !state.articles) return;
+    var code = m[1];
+    try { code = decodeURIComponent(code); } catch (e) { /* 그대로 */ }
+    var link = null;
+    state.articles.some(function (a) {
+      return (a.company_links || []).some(function (l) { if ((l.code || l.name) === code) { link = l; return true; } return false; });
+    });
+    if (!link && !(state.companySummaries && state.companySummaries[code])) return;
+    var name = link ? link.name : code;
+    openCompanyModal(code, name, link ? linkLabel(link) : name);
+  }
+  window.addEventListener("hashchange", openFromHash);
 
   // ---------- 헤더 실제 높이를 CSS 변수로 반영 (태블릿/노트북에서 좌측 패널이 고정 헤더 밑에 오도록) ----------
   var headerEl = document.querySelector(".pv-header");
