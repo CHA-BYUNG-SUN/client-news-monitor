@@ -12,7 +12,8 @@
 
   var state = {
     articles: [],
-    tagOrder: [],
+    nameCodeCount: {},
+    currentCode: null,
     generatedAt: null,
     lookbackDays: null,
     totalArticles: 0,
@@ -21,7 +22,6 @@
     selectedTeam: "전체",
     selectedCell: "전체",
     selectedRep: "전체",
-    selectedTag: "전체",
     majorOnly: false,
     searchText: "",
     visibleCount: PAGE_SIZE,
@@ -51,16 +51,8 @@
     sideBackdrop: document.getElementById("pvSideBackdrop"),
     companyList: document.getElementById("pvCompanyList"),
     sideCount: document.getElementById("pvSideCount"),
-    bottomBar: document.getElementById("pvBottomBar"),
-    openSheetBtn: document.getElementById("pvOpenSheetBtn"),
-    filterCountBadge: document.getElementById("pvFilterCountBadge"),
     topBtn: document.getElementById("pvTopBtn"),
-    tagChips: document.getElementById("pvTagChips"),
     majorOnlyCheckbox: document.getElementById("pvMajorOnly"),
-    panel: document.getElementById("pvSecondaryPanel"),
-    backdrop: document.getElementById("pvSheetBackdrop"),
-    sheetCloseBtn: document.getElementById("pvSheetCloseBtn"),
-    sheetResetBtn: document.getElementById("pvSheetResetBtn"),
     companyModalBackdrop: document.getElementById("pvCompanyModalBackdrop"),
     companyModal: document.getElementById("pvCompanyModal"),
     companyModalTitle: document.getElementById("pvCompanyModalTitle"),
@@ -96,15 +88,59 @@
       var dd = pad2(d.getDate());
       var hh = pad2(d.getHours());
       var mi = pad2(d.getMinutes());
-      if (short) return mm + "." + dd + " " + hh + ":" + mi;
+      if (short) return mm + "/" + dd + " " + hh + ":" + mi;
       return d.getFullYear() + "." + mm + "." + dd + " " + hh + ":" + mi;
     } catch (e) {
       return iso || "";
     }
   }
 
-  function isMobileViewport() {
-    return window.matchMedia("(max-width: 767px)").matches;
+  // 2026-11-22 디자인 통일: 화면 아이콘은 index.html 맨 위 <svg> 묶음(symbol)을 <use>로 쓴다.
+  function svgIcon(id, size, cls) {
+    var ns = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("width", String(size));
+    svg.setAttribute("height", String(size));
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    if (cls) svg.setAttribute("class", cls);
+    var use = document.createElementNS(ns, "use");
+    use.setAttribute("href", "#" + id);
+    svg.appendChild(use);
+    return svg;
+  }
+
+  // "2026-11-22 01:43" -> "11/22 01:43" (형식이 다르면 그대로 둔다)
+  function shortDisplay(s) {
+    var m = /^\d{4}-(\d{2})-(\d{2})\s+(.*)$/.exec(s || "");
+    return m ? m[1] + "/" + m[2] + " " + m[3] : (s || "");
+  }
+
+  function pressAndDate(a) {
+    return (a.press || "") + (a.pubDate_display ? " / " + shortDisplay(a.pubDate_display) : "");
+  }
+
+  // 빈 결과/오류 칸: 굵은 한 줄 + 보조 한 줄 + 버튼(첫 버튼이 녹색 실행색)
+  function fillStateBox(box, title, sub, buttons) {
+    box.innerHTML = "";
+    var t = document.createElement("p");
+    t.className = "nw-state-title";
+    t.textContent = title;
+    box.appendChild(t);
+    var sp = document.createElement("p");
+    sp.className = "nw-state-sub";
+    sp.textContent = sub;
+    box.appendChild(sp);
+    var actions = document.createElement("div");
+    actions.className = "pv-state-actions";
+    buttons.forEach(function (b) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = b[0];
+      btn.addEventListener("click", b[1]);
+      actions.appendChild(btn);
+    });
+    box.appendChild(actions);
   }
 
   // ---------- 업데이트 상태 ----------
@@ -117,7 +153,7 @@
     }
     if (!state.generatedAt) {
       el.statusDot.className = "pv-status__dot";
-      el.statusText.textContent = "업데이트 정보 확인 중…";
+      el.statusText.textContent = "업데이트 정보 확인 중";
       el.counts.textContent = "";
       return;
     }
@@ -133,16 +169,19 @@
       cls = "is-delayed";
     }
     el.statusDot.className = "pv-status__dot " + cls;
-    el.statusText.textContent = label + " · " + fmtDateTime(state.generatedAt, true);
+    el.statusText.textContent = label + " ";
+    var when = document.createElement("b");
+    when.textContent = fmtDateTime(state.generatedAt, true);
+    el.statusText.appendChild(when);
   }
 
   function renderCounts(filteredCount) {
     var parts = [];
     if (state.lookbackDays) parts.push("최근 " + state.lookbackDays + "일");
     parts.push("전체 " + state.totalArticles.toLocaleString("ko-KR") + "건");
-    var line = parts.join(" · ");
+    var line = parts.join(" / ");
     if (filteredCount !== state.totalArticles) {
-      line += " · 검색 결과 " + filteredCount.toLocaleString("ko-KR") + "건";
+      line += " / 검색 결과 " + filteredCount.toLocaleString("ko-KR") + "건";
     }
     el.counts.textContent = line;
   }
@@ -226,24 +265,6 @@
     selectEl.classList.toggle("is-active", selected !== "전체");
   }
 
-  function buildTagChips() {
-    var tags = ["전체"].concat(state.tagOrder);
-    el.tagChips.innerHTML = "";
-    tags.forEach(function (tag) {
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "pv-chip" + (tag === state.selectedTag ? " is-active" : "");
-      btn.textContent = tag;
-      btn.addEventListener("click", function () {
-        state.selectedTag = tag;
-        state.visibleCount = PAGE_SIZE;
-        buildTagChips();
-        applyFiltersAndRender();
-      });
-      el.tagChips.appendChild(btn);
-    });
-  }
-
   // ---------- 검색 매칭 ----------
   // 2026-08-25 수정: 팀/셀/영업명/검색어 조건을 예전에는 기사 전체 배열(team/cell/reps) 기준으로
   // 따로따로 검사했는데, 여러 회사가 함께 걸린 기사에서는 이 방식이 "이 기사에 걸린 회사 중
@@ -253,7 +274,6 @@
   function getFiltered() {
     var linkFilterActive = hasLinkLevelFilters();
     return state.articles.filter(function (a) {
-      if (state.selectedTag !== "전체" && a.tag_label !== state.selectedTag) return false;
       if (state.majorOnly && !a.major) return false;
       if (linkFilterActive && getMatchingLinks(a).length === 0) return false;
       return true;
@@ -262,7 +282,7 @@
 
   function hasActiveFilters() {
     return state.selectedTeam !== "전체" || state.selectedCell !== "전체" || state.selectedRep !== "전체" ||
-      state.selectedTag !== "전체" || state.majorOnly || !!state.searchText;
+      state.majorOnly || !!state.searchText;
   }
 
   // ---------- 피드 제목 ----------
@@ -283,23 +303,39 @@
     return hours >= 0 && hours <= FRESH_HOURS;
   }
 
+  // 기사 카드에 대표로 보여줄 고객 연결: 필터/검색이 걸려 있으면 그 조건에 맞는 회사, 아니면 첫 회사.
+  function primaryLink(a) {
+    var links = a.company_links || [];
+    if (hasLinkLevelFilters()) {
+      var m = getMatchingLinks(a);
+      if (m.length) return m[0];
+    }
+    return links[0] || null;
+  }
+
+  // 이름이 같은 다른 고객(code 다름)이 있으면 "이름 (팀/담당자)"로 구분한다(renderSidePanel과 같은 표기).
+  function linkLabel(l) {
+    if (!l) return "";
+    if ((state.nameCodeCount[l.name] || 0) > 1) {
+      var meta = [].concat(l.team || [], (l.reps || []).slice(0, 1)).filter(Boolean).join("/");
+      if (meta) return l.name + " (" + meta + ")";
+    }
+    return l.name;
+  }
+
+  // 2026-11-22 카드 구조 변경: 예전에는 카드 전체가 <a>여서 안에 버튼을 넣을 수 없었다.
+  // 이제 카드는 <article>, 원문 링크는 제목 <a>(::after로 카드 전체를 누름 영역으로 덮음),
+  // "AI 요약" 버튼은 링크 밖의 별도 버튼(z-index로 덮개 위)이라 서로 중첩되지 않는다.
   function buildCard(a) {
     var href = a.originallink || a.link || "";
-    var card = document.createElement(href ? "a" : "div");
+    var card = document.createElement("article");
     card.className = "pv-card";
-    if (href) {
-      card.href = href;
-      card.target = "_blank";
-      card.rel = "noopener noreferrer";
-      card.addEventListener("click", function () {
-        if (card.dataset.opened) return;
-        card.dataset.opened = "1";
-        setTimeout(function () { delete card.dataset.opened; }, 600);
-      });
-    }
 
     var body = document.createElement("div");
     body.className = "pv-card__body";
+
+    var lead = primaryLink(a);
+    var companyNames = a.companies || [];
 
     var badges = document.createElement("div");
     badges.className = "pv-card__badges";
@@ -309,35 +345,52 @@
       freshBadge.textContent = "오늘 새 기사";
       badges.appendChild(freshBadge);
     }
-    if (a.tag_label) {
-      var tagBadge = document.createElement("span");
-      tagBadge.className = "pv-badge-pill pv-badge-pill--" + a.tag_label;
-      tagBadge.textContent = a.tag_label;
-      badges.appendChild(tagBadge);
-    }
     if (a.major) {
       var majorBadge = document.createElement("span");
-      majorBadge.className = "pv-badge-pill";
-      majorBadge.style.background = "#f2c94c33";
-      majorBadge.style.color = "#7a5b0a";
+      majorBadge.className = "pv-badge-pill pv-badge-pill--major";
       majorBadge.textContent = "메이저 언론사";
       badges.appendChild(majorBadge);
     }
     var companySpan = document.createElement("span");
     companySpan.className = "pv-card__company";
-    // 같은 브랜드의 여러 사업장에 동시에 관련된 기사는 대표로 첫 회사명만 보여주고
+    // 같은 브랜드의 여러 사업장에 동시에 관련된 기사는 대표 회사명만 보여주고
     // 나머지는 "외 N곳"으로 축약한다(배지가 너무 길어지는 것 방지).
-    var companyNames = a.companies || [];
-    companySpan.textContent = companyNames.length > 1
-      ? companyNames[0] + " 외 " + (companyNames.length - 1) + "곳"
-      : (companyNames[0] || "");
-    if (companyNames.length > 1) companySpan.title = companyNames.join(", ");
+    companySpan.textContent = lead ? lead.name : (companyNames[0] || "");
+    if (companyNames.length > 1) {
+      var more = document.createElement("small");
+      more.textContent = "외 " + (companyNames.length - 1) + "곳";
+      companySpan.appendChild(more);
+      companySpan.title = companyNames.join(", ");
+    }
     badges.appendChild(companySpan);
+
+    var leadCode = lead ? (lead.code || lead.name) : "";
+    if (leadCode) {
+      var aiBtn = document.createElement("button");
+      aiBtn.type = "button";
+      aiBtn.className = "nw-ai-btn";
+      aiBtn.setAttribute("aria-label", lead.name + " AI 요약 열기");
+      aiBtn.appendChild(svgIcon("i-spark", 12));
+      aiBtn.appendChild(document.createTextNode("AI 요약"));
+      aiBtn.addEventListener("click", function () {
+        openCompanyModal(leadCode, lead.name, linkLabel(lead));
+      });
+      badges.appendChild(aiBtn);
+    }
     body.appendChild(badges);
 
     var title = document.createElement("p");
     title.className = "pv-card__title";
-    title.textContent = a.title || "";
+    if (href) {
+      var titleLink = document.createElement("a");
+      titleLink.href = href;
+      titleLink.target = "_blank";
+      titleLink.rel = "noopener noreferrer";
+      titleLink.textContent = a.title || "";
+      title.appendChild(titleLink);
+    } else {
+      title.textContent = a.title || "";
+    }
     body.appendChild(title);
 
     if (a.description) {
@@ -352,9 +405,7 @@
       relWrap.className = "pv-related-badges";
       a.matched_sub_names.forEach(function (sub) {
         var b = document.createElement("span");
-        b.className = "pv-badge-pill";
-        b.style.background = "var(--border-soft)";
-        b.style.color = "var(--text-secondary)";
+        b.className = "pv-badge-pill pv-badge-pill--rel";
         b.textContent = "관련: " + sub;
         relWrap.appendChild(b);
       });
@@ -364,31 +415,18 @@
     var meta = document.createElement("div");
     meta.className = "pv-card__meta";
     var left = document.createElement("span");
-    left.textContent = (a.press || "") + (a.pubDate_display ? " · " + a.pubDate_display : "");
+    left.textContent = pressAndDate(a);
     var right = document.createElement("span");
-    var repInfo = [].concat(a.team || [], a.cell || [], a.reps || []).filter(Boolean).join(" · ");
-    right.textContent = repInfo;
+    // 대표 회사의 팀/셀/담당만 보여준다(여러 회사가 걸린 기사에서 다른 회사 담당자가 섞이지 않게).
+    var src = lead || a;
+    right.textContent = [].concat(src.team || [], src.cell || [], src.reps || []).filter(Boolean).join(" / ");
     meta.appendChild(left);
     meta.appendChild(right);
     body.appendChild(meta);
 
     card.appendChild(body);
 
-    if (href) {
-      var arrow = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      arrow.setAttribute("viewBox", "0 0 24 24");
-      arrow.setAttribute("class", "pv-card__arrow");
-      arrow.setAttribute("aria-hidden", "true");
-      var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("d", "M9 6l6 6-6 6");
-      path.setAttribute("fill", "none");
-      path.setAttribute("stroke", "currentColor");
-      path.setAttribute("stroke-width", "2");
-      path.setAttribute("stroke-linecap", "round");
-      path.setAttribute("stroke-linejoin", "round");
-      arrow.appendChild(path);
-      card.appendChild(arrow);
-    }
+    if (href) card.appendChild(svgIcon("i-out", 16, "pv-card__arrow"));
 
     return card;
   }
@@ -413,7 +451,6 @@
     updateFeedTitle();
     renderSidePanel(filtered);
     updateResetState();
-    updateFilterBadge();
 
     var visible = filtered.slice(0, state.visibleCount);
     el.errorState.hidden = true;
@@ -421,27 +458,14 @@
     if (filtered.length === 0) {
       el.articleList.innerHTML = "";
       el.emptyState.hidden = false;
-      el.emptyState.innerHTML = "";
-      var msg = document.createElement("p");
-      msg.textContent = "조건에 맞는 고객 기사가 없습니다. 검색어 또는 필터를 다시 확인해 주세요.";
-      el.emptyState.appendChild(msg);
-      var actions = document.createElement("div");
-      actions.className = "pv-state-actions";
-      var resetBtn = document.createElement("button");
-      resetBtn.type = "button";
-      resetBtn.textContent = "필터 전체 해제";
-      resetBtn.addEventListener("click", resetAllFilters);
-      var clearSearchBtn = document.createElement("button");
-      clearSearchBtn.type = "button";
-      clearSearchBtn.textContent = "검색어 지우기";
-      clearSearchBtn.addEventListener("click", function () {
-        state.searchText = "";
-        el.searchInput.value = "";
-        applyFiltersAndRender();
-      });
-      actions.appendChild(resetBtn);
-      actions.appendChild(clearSearchBtn);
-      el.emptyState.appendChild(actions);
+      fillStateBox(el.emptyState, "조건에 맞는 고객 기사가 없습니다", "검색어 또는 필터를 다시 확인해 주세요.", [
+        ["필터 전체 해제", resetAllFilters],
+        ["검색어 지우기", function () {
+          state.searchText = "";
+          el.searchInput.value = "";
+          applyFiltersAndRender();
+        }],
+      ]);
       el.loadMoreBtn.hidden = true;
       state.prevIds = [];
       return;
@@ -473,24 +497,13 @@
 
     state.prevIds = currentIds;
     el.loadMoreBtn.hidden = filtered.length <= visible.length;
+    el.loadMoreBtn.textContent = "기사 더 보기 (" + Math.min(PAGE_SIZE, filtered.length - visible.length).toLocaleString("ko-KR") + "건)";
     el.loadMoreBtn.disabled = false;
     if (typeof syncHeaderHeight === "function") setTimeout(syncHeaderHeight, 0);
   }
 
   function updateResetState() {
     el.resetBtn.disabled = !hasActiveFilters();
-  }
-
-  function updateFilterBadge() {
-    var count = 0;
-    if (state.selectedTag !== "전체") count++;
-    if (state.majorOnly) count++;
-    if (count > 0) {
-      el.filterCountBadge.hidden = false;
-      el.filterCountBadge.textContent = String(count);
-    } else {
-      el.filterCountBadge.hidden = true;
-    }
   }
 
   // ---------- 담당 고객 (사이드 패널) ----------
@@ -508,12 +521,14 @@
     el.companyList.innerHTML = "";
     var linkFilterActive = hasLinkLevelFilters();
     var linksByCode = {};
+    var countByCode = {};
     filtered.forEach(function (a) {
       var links = linkFilterActive ? getMatchingLinks(a) : (a.company_links || []);
       links.forEach(function (l) {
         // 구버전 news.json(코드 없음) 대비: code가 없으면 이름을 임시 키로 쓴다.
         var code = l.code || l.name;
         if (code && !linksByCode[code]) linksByCode[code] = l;
+        if (code) countByCode[code] = (countByCode[code] || 0) + 1;
       });
     });
 
@@ -528,32 +543,32 @@
       var l = linksByCode[code];
       var label = l.name;
       if (nameCounts[l.name] > 1) {
-        var meta = [].concat(l.team || [], (l.reps || []).slice(0, 1)).filter(Boolean).join("·");
+        var meta = [].concat(l.team || [], (l.reps || []).slice(0, 1)).filter(Boolean).join("/");
         if (meta) label = l.name + " (" + meta + ")";
       }
-      return { code: code, name: l.name, label: label };
+      return { code: code, name: l.name, label: label, count: countByCode[code] || 0 };
     }).sort(function (a, b) { return a.label.localeCompare(b.label, "ko"); });
 
-    el.sideCount.textContent = items.length ? " (" + items.length.toLocaleString("ko-KR") + ")" : "";
+    el.sideCount.textContent = items.length ? " " + items.length.toLocaleString("ko-KR") : "";
 
     if (!items.length) {
       var empty = document.createElement("p");
       empty.className = "pv-company-modal__empty";
-      empty.style.padding = "4px 2px";
       empty.textContent = "조건에 맞는 고객사가 없습니다.";
       el.companyList.appendChild(empty);
       return;
     }
 
     items.forEach(function (item) {
-      el.companyList.appendChild(buildCompanyItem(item.code, item.name, item.label, iconInitials(item.name)));
+      el.companyList.appendChild(buildCompanyItem(item.code, item.name, item.label, iconInitials(item.name), item.count));
     });
   }
 
-  function buildCompanyItem(code, name, label, iconText) {
+  function buildCompanyItem(code, name, label, iconText, count) {
     var btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "pv-company-item";
+    btn.className = "pv-company-item" + (code === state.currentCode ? " is-current" : "");
+    btn.dataset.code = code;
     var icon = document.createElement("span");
     icon.className = "pv-company-item__icon";
     icon.textContent = iconText;
@@ -562,6 +577,12 @@
     span.textContent = label;
     btn.appendChild(icon);
     btn.appendChild(span);
+    if (count) {
+      var n = document.createElement("span");
+      n.className = "nw-item-n";
+      n.textContent = count.toLocaleString("ko-KR");
+      btn.appendChild(n);
+    }
     btn.addEventListener("click", function () {
       closeSide();
       openCompanyModal(code, name, label);
@@ -582,11 +603,22 @@
     renderCompanyModal(code, name, label, getCompanyArticlesByCode(code));
     el.companyModalBackdrop.hidden = false;
     el.companyModal.hidden = false;
+    markCurrentCompany(code);
   }
 
   function closeCompanyModal() {
     el.companyModalBackdrop.hidden = true;
     el.companyModal.hidden = true;
+    markCurrentCompany(null);
+  }
+
+  // 서랍에 연 고객을 좌측 목록에서 강조한다.
+  function markCurrentCompany(code) {
+    state.currentCode = code;
+    var items = el.companyList.querySelectorAll(".pv-company-item");
+    Array.prototype.forEach.call(items, function (b) {
+      b.classList.toggle("is-current", !!code && b.dataset.code === code);
+    });
   }
 
   function articleAgeDays(a) {
@@ -630,10 +662,10 @@
     if (!entry || entry.summary === NO_RELEVANT_NEWS_TEXT) {
       // AI 요약 기능은 켜져 있지만, 이 고객사는 최근 N일 이내 새 기사가 없었거나
       // (또는 검색은 걸렸지만 실제로 무관한 기사뿐이라고 AI가 판단한) 경우.
-      el.companyModalMeta.textContent = baseMetaParts.concat("최근 " + days + "일 새 소식 없음").join(" · ");
+      el.companyModalMeta.textContent = baseMetaParts.concat("최근 " + days + "일 새 소식 없음").join(" / ");
       var empty = document.createElement("p");
       empty.className = "pv-company-modal__empty";
-      empty.textContent = "최근 " + days + "일간 이 고객사와 직접 관련된 기사가 없습니다. 아래 \"전체 보기\"에서 이전 기사를 확인하실 수 있습니다.";
+      empty.textContent = "최근 " + days + "일간 이 고객사와 직접 관련된 기사가 없습니다. 아래 \"이 고객사 기사 전체 보기\"에서 이전 기사를 확인하실 수 있습니다.";
       el.companyModalBody.appendChild(empty);
       el.companyModalViewAllBtn.hidden = articles.length === 0;
       return;
@@ -641,19 +673,20 @@
 
     el.companyModalMeta.textContent = baseMetaParts.concat(
       "최근 " + days + "일 기사 " + entry.based_on.toLocaleString("ko-KR") + "건 기준 요약"
-    ).join(" · ");
+    ).join(" / ");
 
     var summaryBox = document.createElement("div");
     summaryBox.className = "pv-company-modal__summary-box";
     var badge = document.createElement("span");
     badge.className = "pv-company-modal__summary-badge";
-    badge.textContent = "AI 요약";
+    badge.appendChild(svgIcon("i-spark", 13));
+    badge.appendChild(document.createTextNode("AI 요약"));
     var summaryText = document.createElement("p");
     summaryText.className = "pv-company-modal__summary-text";
     summaryText.textContent = entry.summary;
     var summaryMeta = document.createElement("p");
     summaryMeta.className = "pv-company-modal__summary-meta";
-    summaryMeta.textContent = "생성: " + fmtDateTime(entry.generated_at, true);
+    summaryMeta.textContent = "생성 " + fmtDateTime(entry.generated_at, true);
     summaryBox.appendChild(badge);
     summaryBox.appendChild(summaryText);
     summaryBox.appendChild(summaryMeta);
@@ -680,7 +713,7 @@
   // AI 요약 데이터 자체가 없는(구버전) news.json을 만났을 때만 쓰는 예전 방식 렌더러.
   function renderCompanyModalLegacyList(articles, baseMetaParts) {
     var metaParts = baseMetaParts.concat("기사 " + articles.length.toLocaleString("ko-KR") + "건");
-    el.companyModalMeta.textContent = metaParts.join(" · ");
+    el.companyModalMeta.textContent = metaParts.join(" / ");
 
     if (!articles.length) {
       var empty = document.createElement("p");
@@ -699,7 +732,7 @@
     if (articles.length > shown.length) {
       var more = document.createElement("p");
       more.className = "pv-company-modal__empty";
-      more.textContent = "외 " + (articles.length - shown.length).toLocaleString("ko-KR") + "건 더 있습니다 · 아래 \"전체 보기\"에서 확인하세요.";
+      more.textContent = "외 " + (articles.length - shown.length).toLocaleString("ko-KR") + "건 더 있습니다. 아래 \"이 고객사 기사 전체 보기\"에서 확인하세요.";
       el.companyModalBody.appendChild(more);
     }
 
@@ -720,7 +753,7 @@
     title.textContent = a.title || "";
     var meta = document.createElement("span");
     meta.className = "pv-company-modal__ref-item-meta";
-    meta.textContent = (a.press || "") + (a.pubDate_display ? " · " + a.pubDate_display : "");
+    meta.textContent = pressAndDate(a);
     item.appendChild(title);
     item.appendChild(meta);
     return item;
@@ -744,12 +777,6 @@
       freshBadge.textContent = "오늘 새 기사";
       badges.appendChild(freshBadge);
     }
-    if (a.tag_label) {
-      var tagBadge = document.createElement("span");
-      tagBadge.className = "pv-badge-pill pv-badge-pill--" + a.tag_label;
-      tagBadge.textContent = a.tag_label;
-      badges.appendChild(tagBadge);
-    }
     item.appendChild(badges);
 
     var title = document.createElement("p");
@@ -767,12 +794,9 @@
     if ((a.matched_sub_names || []).length) {
       var relWrap = document.createElement("div");
       relWrap.className = "pv-related-badges";
-      relWrap.style.marginBottom = "4px";
       a.matched_sub_names.forEach(function (sub) {
         var b = document.createElement("span");
-        b.className = "pv-badge-pill";
-        b.style.background = "var(--border-soft)";
-        b.style.color = "var(--text-secondary)";
+        b.className = "pv-badge-pill pv-badge-pill--rel";
         b.textContent = "관련: " + sub;
         relWrap.appendChild(b);
       });
@@ -781,7 +805,7 @@
 
     var meta = document.createElement("p");
     meta.className = "pv-company-modal__item-meta";
-    meta.textContent = (a.press || "") + (a.pubDate_display ? " · " + a.pubDate_display : "");
+    meta.textContent = pressAndDate(a);
     item.appendChild(meta);
 
     return item;
@@ -815,7 +839,7 @@
       .slice(0, 5)
       .map(function (r) {
         var info = repMap[r];
-        return { kind: "담당자", value: r, meta: [].concat(info.team || [], info.cell || []).join(" · ") };
+        return { kind: "담당자", value: r, meta: [].concat(info.team || [], info.cell || []).join(" / ") };
       });
 
     var companyResults = Object.keys(companyMap)
@@ -949,41 +973,21 @@
     state.selectedTeam = "전체";
     state.selectedCell = "전체";
     state.selectedRep = "전체";
-    state.selectedTag = "전체";
     state.majorOnly = false;
     state.searchText = "";
     state.visibleCount = PAGE_SIZE;
     el.searchInput.value = "";
     el.majorOnlyCheckbox.checked = false;
     buildFilterOptions();
-    buildTagChips();
     applyFiltersAndRender();
   }
   el.resetBtn.addEventListener("click", resetAllFilters);
-  el.sheetResetBtn.addEventListener("click", function () {
-    resetAllFilters();
-    closeSheet();
-  });
 
   el.loadMoreBtn.addEventListener("click", function () {
     el.loadMoreBtn.disabled = true;
     state.visibleCount += PAGE_SIZE;
     render();
   });
-
-  // ---------- 이슈유형/메이저 패널 (모바일 바텀시트 / 태블릿·노트북 인라인) ----------
-  function openSheet() {
-    if (!isMobileViewport()) return;
-    el.panel.classList.add("is-open");
-    el.backdrop.hidden = false;
-  }
-  function closeSheet() {
-    el.panel.classList.remove("is-open");
-    el.backdrop.hidden = true;
-  }
-  el.openSheetBtn.addEventListener("click", openSheet);
-  el.sheetCloseBtn.addEventListener("click", closeSheet);
-  el.backdrop.addEventListener("click", closeSheet);
 
   // ---------- 담당 고객 목록 드로어 (1024px 미만: 햄버거 버튼으로 열고 닫기) ----------
   function openSide() {
@@ -1011,7 +1015,6 @@
   el.majorOnlyCheckbox.addEventListener("change", function (e) {
     state.majorOnly = e.target.checked;
     state.visibleCount = PAGE_SIZE;
-    updateFilterBadge();
     applyFiltersAndRender();
   });
 
@@ -1107,7 +1110,17 @@
           }
           return a;
         });
-        state.tagOrder = uniqueSorted(state.articles.map(function (a) { return a.tag_label; }));
+        // 이름이 같은 서로 다른 고객(code) 수: 카드 "AI 요약" 서랍 제목 구분용
+        var seenCode = {};
+        state.nameCodeCount = {};
+        state.articles.forEach(function (a) {
+          a.company_links.forEach(function (l) {
+            var c = l.code || l.name;
+            if (!c || seenCode[c]) return;
+            seenCode[c] = true;
+            state.nameCodeCount[l.name] = (state.nameCodeCount[l.name] || 0) + 1;
+          });
+        });
         state.generatedAt = data.generated_at || null;
         state.lookbackDays = data.lookback_days || null;
         state.totalArticles = data.total_articles || state.articles.length;
@@ -1119,7 +1132,6 @@
         state.loadError = null;
 
         buildFilterOptions();
-        buildTagChips();
         renderStatus();
         render({ freshRender: true });
       })
@@ -1127,18 +1139,9 @@
         state.loadError = err;
         renderStatus();
         el.errorState.hidden = false;
-        el.errorState.innerHTML = "";
-        var p = document.createElement("p");
-        p.textContent = "뉴스 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
-        var actions = document.createElement("div");
-        actions.className = "pv-state-actions";
-        var retry = document.createElement("button");
-        retry.type = "button";
-        retry.textContent = "다시 시도";
-        retry.addEventListener("click", loadData);
-        actions.appendChild(retry);
-        el.errorState.appendChild(p);
-        el.errorState.appendChild(actions);
+        fillStateBox(el.errorState, "뉴스 데이터를 불러오지 못했습니다", "잠시 후 다시 시도해 주세요.", [
+          ["다시 시도", loadData],
+        ]);
         el.articleList.innerHTML = "";
         el.emptyState.hidden = true;
         el.loadMoreBtn.hidden = true;
