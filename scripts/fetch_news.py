@@ -20,7 +20,16 @@
    - context_window: 숫자(글자 수). 이름이 요약에만 있을 때 context_keywords 가 그 이름 근처에 있어야 인정
 8. config/global_exclude_keywords.json 에 등록된 키워드가 제목/본문에 하나라도 있으면
    고객사와 상관없이 전체 공통으로 기사를 제외함 (예: 주가/증시 등 증권사 리포트성 노이즈 기사)
-9. data/news.json 으로 결과 저장 (GitHub Pages 정적 사이트에서 fetch 하여 사용)
+9. (2026-11-23) 매칭 품질 자동 판정(scripts/match_quality.py) - 예외 설정이 없는 회사도 자동 적용
+   - 모든 회사: 이름 앞뒤 단어 경계(조사/법인표기/그룹 등만 허용) -> 다른 단어 속 글자로 잡힌 기사 제외
+   - 위험 이름(한글 2자 이하, 영문 3자 이하): 법인표기/주체표현/이름 근처 업종 키워드 중 하나 필요
+   - 이번 수집분에서 이름이 대부분 일반 단어/다른 실체(법무법인 등)로 쓰인 회사는 '일반명사 모드'로 자동 전환
+   - 근거가 약한 기사는 버리지 않고 news.json 의 uncertain_articles(보류함)에 따로 저장 (화면/AI 요약에는 미사용)
+   - 보류함 기사는 ANTHROPIC_API_KEY 가 있으면 Claude Haiku 에게 "같은 회사 기사인가"를 물어
+     true 면 일반 기사로 올리고(judged_by="ai"), false 면 이유와 함께 보류함에 남긴다.
+     (AI_JUDGE_MAX 기본 100건/회, AI_JUDGE_BATCH 기본 10건/호출, 오류 시 그대로 보류)
+   - 끄기: 환경변수 MATCH_QUALITY=off (AI 판정만 끄기: AI_JUDGE=off)
+10. data/news.json 으로 결과 저장 (GitHub Pages 정적 사이트에서 fetch 하여 사용)
 
 환경변수
 - NAVER_CLIENT_ID, NAVER_CLIENT_SECRET : 네이버 개발자센터에서 발급받은 값 (필수)
@@ -47,6 +56,9 @@ from email.utils import parsedate_to_datetime
 from urllib.parse import urlparse
 from urllib import request as urlrequest
 from urllib import error as urlerror
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import match_quality as mq  # noqa: E402
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_DIR = os.path.join(BASE_DIR, "config")
@@ -403,7 +415,109 @@ def call_anthropic_summary(prompt, api_key, retries=3):
     return None
 
 
-def build_summary_prompt(company_name, articles):
+AI_JUDGE_MODEL = ANTHROPIC_MODEL  # 요약과 같은 모델(Haiku)
+
+
+def call_anthropic_text(prompt, api_key, max_tokens=800, timeout=30):
+    """Claude 호출 1회(재시도 없음). 실패하면 None. 보류함 AI 판정용."""
+    body = json.dumps({
+        "model": AI_JUDGE_MODEL,
+        "max_tokens": max_tokens,
+        "messages": [{"role": "user", "content": prompt}],
+    }).encode("utf-8")
+    req = urlrequest.Request(ANTHROPIC_API_URL, data=body, method="POST")
+    req.add_header("x-api-key", api_key)
+    req.add_header("anthropic-version", "2023-06-01")
+    req.add_header("content-type", "application/json")
+    try:
+        with urlrequest.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        parts = data.get("content", [])
+        return "".join(p.get("text", "") for p in parts if p.get("type") == "text").strip() or None
+    except Exception as e:
+        print(f"    [경고] 보류함 AI 판정 호출 실패: {e}", file=sys.stderr)
+        return None
+
+
+def build_ai_judge_prompt(batch):
+    """batch: [(id, 보류기사)] -> 엄격한 JSON 배열만 답하게 하는 프롬프트"""
+    lines = []
+    for i, u in batch:
+        inds = "/".join(x for x in u.get("industry", []) if x) or "미상"
+        lines.append(json.dumps({
+            "id": i,
+            "company": display_company_name(u.get("name", "")),
+            "industry": inds,
+            "title": u.get("title", ""),
+            "summary": u.get("description", ""),
+        }, ensure_ascii=False))
+    return (
+        "아래 각 줄은 거래처(회사)명과 업종, 그리고 그 회사명으로 검색된 뉴스 제목/요약입니다. "
+        "각 기사가 '바로 그 회사(해당 업종의 제조 관련 기업)'에 대한 기사인지 판정하세요. "
+        "회사명이 일반 단어(예: 동사/명사)로 쓰였거나, 이름만 같은 다른 회사/로펌/해외 업체/제품/인물이면 false 입니다. "
+        "판단 근거가 부족하면 false 로 답하세요.\n"
+        "반드시 JSON 배열만 출력하고 다른 말은 쓰지 마세요. 형식: "
+        '[{"id": 숫자, "same_company": true 또는 false, "reason": "20자 이내"}]\n\n'
+        + "\n".join(lines)
+    )
+
+
+def parse_ai_judge(text, valid_ids):
+    """Haiku 응답에서 {id: (bool, reason)} 를 꺼낸다. 형식이 틀리면 빈 dict(=전부 보류 유지)."""
+    if not text:
+        return {}
+    t = text.strip()
+    t = re.sub(r"^```(?:json)?\s*|\s*```$", "", t)
+    a, b = t.find("["), t.rfind("]")
+    if a < 0 or b <= a:
+        return {}
+    try:
+        data = json.loads(t[a:b + 1])
+    except Exception:
+        return {}
+    out = {}
+    if not isinstance(data, list):
+        return {}
+    for d in data:
+        if not isinstance(d, dict):
+            continue
+        i, same = d.get("id"), d.get("same_company")
+        if isinstance(i, bool) or not isinstance(i, int) or i not in valid_ids or not isinstance(same, bool):
+            continue
+        out[i] = (same, str(d.get("reason", ""))[:20])
+    return out
+
+
+def ai_judge_uncertain(uncertain, api_key, max_articles=100, batch_size=10, call=None):
+    """보류함 기사를 Haiku 로 판정. 반환: (승격할 [(기사, 이유)], 통계). 오류는 모두 보류 유지."""
+    call = call or call_anthropic_text
+    stats = {"asked": 0, "promoted": 0, "kept": 0, "failed": 0, "skipped_cap": 0}
+    promoted = []
+    targets = uncertain[:max_articles]
+    stats["skipped_cap"] = max(0, len(uncertain) - len(targets))
+    for start in range(0, len(targets), batch_size):
+        chunk = list(enumerate(targets[start:start + batch_size], start=start))
+        stats["asked"] += len(chunk)
+        try:
+            res = parse_ai_judge(call(build_ai_judge_prompt(chunk), api_key), {i for i, _ in chunk})
+        except Exception as e:  # 어떤 오류도 실행 전체를 멈추지 않는다
+            print(f"    [경고] 보류함 AI 판정 처리 오류: {e}", file=sys.stderr)
+            res = {}
+        for i, u in chunk:
+            if i not in res:
+                stats["failed"] += 1
+                continue
+            same, reason = res[i]
+            u["ai_reason"] = reason
+            if same:
+                promoted.append((u, reason))
+                stats["promoted"] += 1
+            else:
+                stats["kept"] += 1
+    return promoted, stats
+
+
+def build_summary_prompt(company_name, articles, industry=None):
     # 2026-08-25 수정: 프롬프트에 넘기는 회사명은 "현대트랜시스(주)_ERP"같은 원본 표기 대신
     # display_company_name()으로 정리한 이름을 쓴다. "_ERP"/"(주)" 같은 내부 시스템 표기가
     # 실제 기사 본문에는 당연히 등장하지 않는데, 원본 표기를 그대로 프롬프트에 넣으면 AI가
@@ -418,7 +532,15 @@ def build_summary_prompt(company_name, articles):
             f"- [{a['tag_label']}] {a['title']} ({a['press']}, {a['pubDate_display']}): {a['description']}"
         )
     articles_text = "\n".join(lines)
+    # 2026-11-23 추가: 업종을 함께 알려 주어, 이름만 같은 다른 업종 기사(금 ETF, 로펌, 스포츠 등)를 AI가 더 잘 걸러내게 한다.
+    industry_hint = ""
+    inds = [i for i in (industry or []) if i and i not in ("미분류", "기타")]
+    if inds:
+        industry_hint = (f"참고로 '{display_name}'은(는) {'/'.join(inds)} 업종의 제조 관련 거래처입니다. "
+                         "이 업종과 무관한 기사(예: 금융시장 전망, 법률사무소, 스포츠, 연예, 일반 명사로 쓰인 경우)는 "
+                         "이름이 같아도 무시하세요. ")
     return (
+        industry_hint +
         f"다음은 '{display_name}'과 관련된 것으로 자동 수집된 최근 기사 목록입니다. "
         f"('{display_name}'라는 이름은 고객 관리 시스템에 등록된 회사명에서 '(주)', '_ERP' 같은 내부 표기만 "
         "정리한 이름이며, 실제 기사에는 이 이름 그대로, 혹은 일부만 등장할 수 있습니다.) "
@@ -439,7 +561,8 @@ def build_summary_prompt(company_name, articles):
     )
 
 
-def generate_company_summaries(all_articles, api_key, lookback_days=20, max_articles=5, request_delay=0.3):
+def generate_company_summaries(all_articles, api_key, lookback_days=20, max_articles=5, request_delay=0.3,
+                               industries=None):
     """최근 lookback_days일 이내 기사가 있는 고객사만 골라 Claude Haiku로 2~3문장 요약을 생성한다.
     all_articles는 이미 '우선순위 태그 -> 최신순'으로 정렬돼 있는데, 이 전역 순서만 그대로 잘라서
     상위 max_articles건을 쓰면 문제가 생길 수 있다: 예를 들어 "현대트랜시스" 같은 대기업 고객은
@@ -489,7 +612,7 @@ def generate_company_summaries(all_articles, api_key, lookback_days=20, max_arti
             articles, key=lambda a: 0 if company_title_hit(a, code, company_name) else 1
         )
         top_articles = ranked_articles[:max_articles]
-        prompt = build_summary_prompt(company_name, top_articles)
+        prompt = build_summary_prompt(company_name, top_articles, (industries or {}).get(code))
         print(f"  [{i}/{total}] 요약 생성: {company_name} (code={code}, {len(top_articles)}건 기준)")
         summary_text = call_anthropic_summary(prompt, api_key)
         if summary_text:
@@ -537,6 +660,13 @@ def main():
 
     cutoff = datetime.now(KST) - timedelta(days=lookback_days)
 
+    # 2026-11-23 매칭 품질 판정 준비
+    match_quality_on = os.environ.get("MATCH_QUALITY", "on").lower() != "off"
+    common_ratio = float(os.environ.get("MATCH_COMMON_RATIO", "0.5"))
+    longer_names = mq.build_longer_names(companies_cfg, overrides_cfg)
+    uncertain_articles = []   # 보류함: 이름은 나오지만 이 회사 기사라는 근거가 약한 것
+    match_stats = {"ok": 0, "uncertain": 0, "reject": 0, "common_mode": []}
+
     all_articles = []
     seen_articles = []  # 전역 중복 체크용 (링크/유사 제목)
 
@@ -578,6 +708,17 @@ def main():
             time.sleep(request_delay)
         items = list(items_by_key.values())
 
+        # 2026-11-23: 위험 이름 회사는 이번 수집분에서 이름이 일반 단어/다른 실체로 쓰인 비율을 재서
+        # 절반 이상이면 '일반명사 모드'(법인표기 또는 제목+업종어만 인정)로 판정한다.
+        common_mode = False
+        if match_quality_on and any(mq.is_risky_name(n, override) for n in match_names):
+            texts = [(clean_text(it.get("title", "")), clean_text(it.get("description", ""))) for it in items]
+            ratio, seen = mq.company_noise_ratio(texts, match_names, company, override, longer_names)
+            if seen >= 5 and ratio >= common_ratio:
+                common_mode = True
+                match_stats["common_mode"].append(code)
+                print(f"       [일반명사 모드] 이름이 다른 뜻으로 쓰인 비율 {ratio:.0%} ({seen}건 중)")
+
         kept, skipped_old, skipped_dup, skipped_irrelevant, skipped_stock = 0, 0, 0, 0, 0
         for item in items:
             pub_dt = parse_pubdate(item.get("pubDate", ""))
@@ -607,6 +748,29 @@ def main():
             if exclude_keywords and contains_any_keyword(combined_text, exclude_keywords):
                 skipped_irrelevant += 1
                 continue
+
+            # 2026-11-23 매칭 품질 판정 (단어 경계 / 위험 이름 / 일반명사 모드)
+            if match_quality_on:
+                verdict, why = mq.judge(title, description, match_names, company, override,
+                                        longer_names=longer_names, common=common_mode)
+                match_stats[verdict] += 1
+                if verdict == "reject":
+                    skipped_irrelevant += 1
+                    continue
+                if verdict == "uncertain":
+                    skipped_irrelevant += 1
+                    uncertain_articles.append({
+                        "code": code, "name": name, "reason": why,
+                        "industry": list(company.get("industry", []) or []),
+                        "matched_sub_names": find_matched_sub_names(title, description, sub_names),
+                        "title": title, "description": description,
+                        "link": item.get("link", ""),
+                        "originallink": item.get("originallink", "") or item.get("link", ""),
+                        "pubDate_iso": pub_dt.isoformat(),
+                        "pubDate_display": pub_dt.strftime("%Y-%m-%d %H:%M"),
+                        "team": list(team), "cell": list(cell), "reps": list(reps),
+                    })
+                    continue
 
             # 2026-08-25 수정: 전역 "증시노이즈 제외" 목록(코스피/코스닥/주가 등)은 원래
             # 회사명만 겹치고 내용은 전혀 무관한 증권사 리포트성 잡음을 걸러내기 위한 것이었다.
@@ -754,6 +918,60 @@ def main():
 
         print(f"       수집 {len(items)} / 채택 {kept} / 중복제외 {skipped_dup} / 기간외제외 {skipped_old} / 나열형제외 {skipped_irrelevant} / 증시노이즈제외 {skipped_stock}")
 
+    # 2026-11-23 보류함 AI 판정: true 는 일반 기사로 승격(judged_by="ai"), false/실패는 보류함에 남김
+    if match_quality_on and uncertain_articles:
+        ai_on = os.environ.get("AI_JUDGE", "on").lower() != "off"
+        if ai_on and anthropic_api_key:
+            uncertain_articles.sort(key=lambda a: a["pubDate_iso"], reverse=True)
+            promoted, ai_stats = ai_judge_uncertain(
+                uncertain_articles, anthropic_api_key,
+                max_articles=int(os.environ.get("AI_JUDGE_MAX", "100")),
+                batch_size=int(os.environ.get("AI_JUDGE_BATCH", "10")))
+            match_stats["ai_judge"] = ai_stats
+            print(f"\n보류함 AI 판정: 질의 {ai_stats['asked']} / 승격 {ai_stats['promoted']} / 보류 유지 {ai_stats['kept']}"
+                  f" / 응답 실패 {ai_stats['failed']} / 상한 초과 {ai_stats['skipped_cap']}")
+            promoted_ids = set()
+            for u, reason in promoted:
+                try:
+                    promoted_ids.add(id(u))
+                    link_info = {"code": u["code"], "name": u["name"],
+                                 "matched_sub_names": list(u.get("matched_sub_names", [])),
+                                 "team": list(u["team"]), "cell": list(u["cell"]), "reps": list(u["reps"]),
+                                 "judged_by": "ai"}
+                    domain = get_domain(u["originallink"]) or get_domain(u["link"])
+                    press_name, is_major = resolve_media(domain, media_cfg)
+                    tag_key, tag_label, tag_color = resolve_tag(u["title"], u["description"], keyword_cfg)
+                    art = {
+                        "companies": [u["name"]], "company_links": [link_info],
+                        "matched_sub_names": list(u.get("matched_sub_names", [])),
+                        "team": list(u["team"]), "cell": list(u["cell"]), "reps": list(u["reps"]),
+                        "title": u["title"], "description": u["description"],
+                        "link": u["link"], "originallink": u["originallink"],
+                        "press": press_name, "domain": domain, "major": is_major,
+                        "pubDate_iso": u["pubDate_iso"], "pubDate_display": u["pubDate_display"],
+                        "tag_key": tag_key, "tag_label": tag_label, "tag_color": tag_color,
+                        "judged_by": "ai", "ai_reason": reason,
+                        "_norm_title": normalize_title(u["title"]),
+                    }
+                    dup = is_duplicate(art, seen_articles)
+                    if dup:
+                        if not any(l.get("code") == u["code"] for l in dup["company_links"]):
+                            dup["company_links"].append(link_info)
+                        for key, vals in (("companies", [u["name"]]), ("team", u["team"]), ("cell", u["cell"]),
+                                          ("reps", u["reps"]), ("matched_sub_names", u.get("matched_sub_names", []))):
+                            for v in vals:
+                                if v not in dup[key]:
+                                    dup[key].append(v)
+                    else:
+                        seen_articles.append(art)
+                        all_articles.append(art)
+                except Exception as e:  # 한 건 오류로 전체 실행이 멈추지 않게
+                    promoted_ids.discard(id(u))
+                    print(f"    [경고] 보류함 승격 처리 오류(보류 유지): {e}", file=sys.stderr)
+            uncertain_articles = [u for u in uncertain_articles if id(u) not in promoted_ids]
+        else:
+            print("\n[안내] 보류함 AI 판정 건너뜀 (ANTHROPIC_API_KEY 없음 또는 AI_JUDGE=off)")
+
     # 우선순위 정렬: 먼저 최신순으로 정렬한 뒤, 태그 우선순위(투자>수주>협업>자동화>일반)로 안정 정렬
     # (동일 우선순위 그룹 내에서는 최신 기사가 위로 오도록 stable sort 활용)
     all_articles.sort(key=lambda a: a["pubDate_iso"], reverse=True)
@@ -772,6 +990,12 @@ def main():
         "total_articles": len(all_articles),
         "articles": all_articles,
     }
+    if match_quality_on:
+        uncertain_articles.sort(key=lambda a: a["pubDate_iso"], reverse=True)
+        output["uncertain_articles"] = uncertain_articles
+        output["match_stats"] = match_stats
+        print(f"\n매칭 판정: 채택 {match_stats['ok']} / 보류 {match_stats['uncertain']} / 제외 {match_stats['reject']}"
+              f" / 일반명사 모드 {len(match_stats['common_mode'])}곳")
 
     if anthropic_api_key:
         company_summaries = generate_company_summaries(
@@ -780,6 +1004,7 @@ def main():
             lookback_days=summary_lookback_days,
             max_articles=summary_max_articles,
             request_delay=summary_request_delay,
+            industries={c.get("code"): c.get("industry", []) for c in companies_cfg},
         )
         output["summary_lookback_days"] = summary_lookback_days
         output["company_summaries"] = company_summaries
