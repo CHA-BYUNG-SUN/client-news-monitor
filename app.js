@@ -27,6 +27,12 @@
     visibleCount: PAGE_SIZE,
     prevIds: [],
     loadError: null,
+    // 2026-11-24 사건 분류(ev)가 있는 데이터인지, 곁가지/주가 보기, 사업 소식 있는 고객만
+    hasEv: false,
+    bizDays: 90,
+    showFold: false,
+    bizOnly: false,
+    groupIndex: {},
   };
 
   var el = {
@@ -143,6 +149,200 @@
     box.appendChild(actions);
   }
 
+  // ---------- (2026-11-24) 사건 분류: 사업 소식 / 일반 / 곁가지/주가, 같은 소식 묶음 ----------
+  // fetch_news.py 가 회사별 연결(company_links)마다 ev = {tier, type, date, quote, g, n, lead} 를 붙여 준다.
+  // ev 가 없는 예전 데이터는 모두 "일반"으로 보고 예전 화면과 똑같이 동작한다.
+  function evOf(l) { return (l && l.ev) || { tier: "gen" }; }
+  function isLeadEv(ev) { return !ev.g || !!ev.lead; }
+  function groupKey(code, ev) { return code + "|" + ev.g; }
+
+  function buildGroupIndex() {
+    var idx = {};
+    state.articles.forEach(function (a) {
+      (a.company_links || []).forEach(function (l) {
+        var ev = l.ev;
+        if (!ev || !ev.g) return;
+        var k = groupKey(l.code || l.name, ev);
+        (idx[k] = idx[k] || []).push(a);
+      });
+    });
+    state.groupIndex = idx;
+  }
+
+  // 같은 소식(대표 기사 제외) 목록
+  function sameNewsOthers(a, l) {
+    var ev = evOf(l);
+    if (!ev.g || (ev.n || 1) < 2) return [];
+    return (state.groupIndex[groupKey(l.code || l.name, ev)] || []).filter(function (x) { return x !== a; });
+  }
+
+  // 근거 문구가 제목을 되풀이하면 숨긴다(제목에 없는 단서가 있을 때만 보임)
+  function normTxt(s) { return (s || "").replace(/[\s'"‘’“”.,…]/g, "").toLowerCase(); }
+  function quoteAddsInfo(ev, a) {
+    if (!ev.quote) return false;
+    return normTxt(a.title).indexOf(normTxt(ev.quote)) === -1;
+  }
+
+  function daysAgo(iso) {
+    var t = new Date(iso.length === 10 ? iso + "T12:00:00+09:00" : iso).getTime();
+    if (isNaN(t)) return null;
+    return Math.max(0, Math.floor((Date.now() - t) / 86400000));
+  }
+
+  // "11/20 / 4일 전" (사건 날짜) 또는 "보도 11/20 / 4일 전" (사건 날짜를 모를 때)
+  function eventDateLabel(a, ev) {
+    var iso = ev.date || a.pubDate_iso || "";
+    var m = /^\d{4}-(\d{2})-(\d{2})/.exec(iso);
+    if (!m) return { text: "", old: false };
+    var dd = daysAgo(iso);
+    var ago = dd === null ? "" : (dd === 0 ? "오늘" : dd + "일 전");
+    return { text: (ev.date ? "" : "보도 ") + m[1] + "/" + m[2] + (ago ? " / " + ago : ""), old: dd !== null && dd > 60 };
+  }
+
+  function evPill(ev) {
+    var p = document.createElement("span");
+    if (ev.tier === "biz") {
+      p.className = "nw-ev-pill";
+      p.textContent = ev.type || "사업 소식";
+    } else {
+      p.className = "nw-ev-pill nw-ev-pill--quiet";
+      p.textContent = ev.tier === "fold" ? (ev.type === "실적/주가" ? "주가/실적" : "곁가지 언급") : (ev.type || "일반");
+    }
+    return p;
+  }
+
+  // (2026-11-24 형 결정) DART 전자공시 출처 스티커: 기사 자체가 공시이거나, 같은 소식 묶음에 공시가 있으면 붙인다
+  function hasDart(a, l) {
+    if (a.source === "DART") return true;
+    return !!l && sameNewsOthers(a, l).some(function (x) { return x.source === "DART"; });
+  }
+  function dartPill(small) {
+    var p = document.createElement("span");
+    p.className = "nw-src-dart" + (small ? " nw-src-dart--sm" : "");
+    p.textContent = "DART";
+    p.title = "전자공시(DART) 원문";
+    return p;
+  }
+
+  // 같은 소식 펼치기 버튼 + 목록 (카드/서랍 공용)
+  function sameNewsBlock(others) {
+    var wrap = document.createElement("div");
+    wrap.className = "nw-same";
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "nw-same__btn";
+    btn.setAttribute("aria-expanded", "false");
+    var label = "같은 소식 +" + others.length;
+    btn.textContent = label;
+    var list = document.createElement("div");
+    list.className = "nw-same__list";
+    list.hidden = true;
+    others.forEach(function (x) {
+      var href = x.originallink || x.link || "";
+      var it = document.createElement(href ? "a" : "span");
+      it.className = "nw-same__item";
+      if (href) { it.href = href; it.target = "_blank"; it.rel = "noopener noreferrer"; }
+      var t = document.createElement("span");
+      t.className = "nw-same__title";
+      t.textContent = x.title || "";
+      var m = document.createElement("span");
+      m.className = "nw-same__meta";
+      if (x.source === "DART") m.appendChild(dartPill(true));
+      m.appendChild(document.createTextNode(pressAndDate(x)));
+      it.appendChild(t);
+      it.appendChild(m);
+      list.appendChild(it);
+    });
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      list.hidden = !list.hidden;
+      btn.setAttribute("aria-expanded", list.hidden ? "false" : "true");
+      btn.textContent = list.hidden ? label : "같은 소식 접기";
+    });
+    wrap.appendChild(btn);
+    wrap.appendChild(list);
+    return wrap;
+  }
+
+  // 피드에서 이 기사를 보일지: 곁가지/주가만 걸린 기사는 체크 전까지 빼고, 같은 소식은 대표만
+  function feedLinks(a) {
+    return hasLinkLevelFilters() ? getMatchingLinks(a) : (a.company_links || []);
+  }
+  function feedVisible(a) {
+    if (!state.hasEv) return true;
+    var ls = feedLinks(a);
+    if (!ls.length) return true;
+    if (!ls.some(function (l) { return isLeadEv(evOf(l)); })) return false;
+    if (!state.showFold && ls.every(function (l) { return evOf(l).tier === "fold"; })) return false;
+    return true;
+  }
+  function isFoldOnly(a) {
+    var ls = feedLinks(a);
+    return ls.length > 0 && ls.every(function (l) { return evOf(l).tier === "fold"; }) &&
+      ls.some(function (l) { return isLeadEv(evOf(l)); });
+  }
+
+  // 회사별 사건 수(같은 소식은 1건으로)
+  function buildEvCounts() {
+    var all = {};
+    state.articles.forEach(function (a) {
+      (a.company_links || []).forEach(function (l) {
+        var code = l.code || l.name;
+        var c = all[code] = all[code] || { biz: 0, gen: 0, fold: 0 };
+        var ev = evOf(l);
+        if (isLeadEv(ev) && c[ev.tier] !== undefined) c[ev.tier] += 1;
+      });
+    });
+    state.evCounts = all;
+  }
+  function companyEvCounts(code) {
+    return (state.evCounts || {})[code] || { biz: 0, gen: 0, fold: 0 };
+  }
+
+  // 필터 줄의 "곁가지/주가 기사도 보기" 와 담당 고객 머리의 "사업 소식 있는 고객만"
+  // (index.html 은 그대로 두고 여기서 만든다 - 허브 조립 스크립트와 겹치지 않게)
+  var foldToggle = null;
+  var bizOnlyBtn = null;
+  function ensureEvControls() {
+    if (!state.hasEv) return;
+    if (!foldToggle && el.majorOnlyCheckbox) {
+      foldToggle = document.createElement("label");
+      foldToggle.className = "pv-major-toggle nw-fold-toggle";
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.id = "nwShowFold";
+      cb.addEventListener("change", function (e) {
+        state.showFold = e.target.checked;
+        state.visibleCount = PAGE_SIZE;
+        applyFiltersAndRender();
+      });
+      foldToggle.appendChild(cb);
+      foldToggle.appendChild(document.createTextNode(" "));
+      foldToggle.appendChild(document.createElement("span"));
+      var majorLabel = el.majorOnlyCheckbox.closest("label");
+      majorLabel.parentNode.insertBefore(foldToggle, majorLabel.nextSibling);
+    }
+    if (!bizOnlyBtn && el.sideCount) {
+      bizOnlyBtn = document.createElement("button");
+      bizOnlyBtn.type = "button";
+      bizOnlyBtn.className = "nw-bizonly";
+      bizOnlyBtn.setAttribute("aria-pressed", "false");
+      bizOnlyBtn.textContent = "사업 소식 있는 고객만";
+      bizOnlyBtn.addEventListener("click", function () {
+        state.bizOnly = !state.bizOnly;
+        bizOnlyBtn.setAttribute("aria-pressed", state.bizOnly ? "true" : "false");
+        applyFiltersAndRender();
+      });
+      var head = el.sideCount.closest(".pv-side__head");
+      head.parentNode.insertBefore(bizOnlyBtn, head.nextSibling);
+    }
+  }
+  function updateFoldToggle(foldCount) {
+    if (!foldToggle) return;
+    foldToggle.querySelector("span").textContent = "곁가지/주가 기사도 보기 (" + foldCount.toLocaleString("ko-KR") + ")";
+  }
+
   // ---------- 업데이트 상태 ----------
   function renderStatus() {
     if (state.loadError) {
@@ -177,9 +377,14 @@
 
   function renderCounts(filteredCount) {
     var parts = [];
-    if (state.lookbackDays) parts.push("최근 " + state.lookbackDays + "일");
+    if (state.lookbackDays) parts.push("최근 " + state.lookbackDays + "일" + (state.hasEv ? " (사업 소식 " + state.bizDays + "일)" : ""));
     parts.push("전체 " + state.totalArticles.toLocaleString("ko-KR") + "건");
     var line = parts.join(" / ");
+    if (state.hasEv) {
+      // 같은 소식은 1건으로, 곁가지/주가는 접어서 세므로 '보이는 소식' 수를 따로 적는다
+      el.counts.textContent = line + " / " + (hasActiveFilters() ? "검색 결과 " : "보이는 소식 ") + filteredCount.toLocaleString("ko-KR") + "건";
+      return;
+    }
     if (filteredCount !== state.totalArticles) {
       line += " / 검색 결과 " + filteredCount.toLocaleString("ko-KR") + "건";
     }
@@ -226,8 +431,25 @@
     });
   }
 
+  // 2026-11-25 툴 개수 의뢰 #14: 팀/셀/영업명 목록은 기사뿐 아니라 news.json 의 전체 고객 명단(roster)에서도 만든다
+  // (담당 고객 기사가 0건인 영업도 목록에 나오게). roster 가 없는 예전 데이터는 기사 기준 그대로.
+  function rosterCountFor() {
+    return (state.roster || []).filter(function (l) {
+      if (state.selectedTeam !== "전체" && (l.team || []).indexOf(state.selectedTeam) === -1) return false;
+      if (state.selectedCell !== "전체" && (l.cell || []).indexOf(state.selectedCell) === -1) return false;
+      if (state.selectedRep !== "전체" && (l.reps || []).indexOf(state.selectedRep) === -1) return false;
+      if (state.searchText) {
+        var t = state.searchText.toLowerCase();
+        var hit = (l.name || "").toLowerCase().indexOf(t) !== -1 ||
+          (l.reps || []).some(function (r) { return (r || "").toLowerCase().indexOf(t) !== -1; });
+        if (!hit) return false;
+      }
+      return true;
+    }).length;
+  }
+
   function buildFilterOptions() {
-    var allLinks = state.articles.reduce(function (acc, a) { return acc.concat(a.company_links || []); }, []);
+    var allLinks = state.articles.reduce(function (acc, a) { return acc.concat(a.company_links || []); }, []).concat(state.roster || []);
     var teams = uniqueSorted(allLinks.reduce(function (acc, l) { return acc.concat(l.team || []); }, []));
 
     var cellLinks = allLinks.filter(function (l) {
@@ -276,8 +498,18 @@
     return state.articles.filter(function (a) {
       if (state.majorOnly && !a.major) return false;
       if (linkFilterActive && getMatchingLinks(a).length === 0) return false;
-      return true;
+      return feedVisible(a);
     });
+  }
+
+  // 곁가지/주가만 걸려 피드에서 빠진 기사 수 (체크 상자 옆 숫자)
+  function countFoldHidden() {
+    var linkFilterActive = hasLinkLevelFilters();
+    return state.articles.filter(function (a) {
+      if (state.majorOnly && !a.major) return false;
+      if (linkFilterActive && getMatchingLinks(a).length === 0) return false;
+      return isFoldOnly(a);
+    }).length;
   }
 
   function hasActiveFilters() {
@@ -336,9 +568,14 @@
 
     var lead = primaryLink(a);
     var companyNames = a.companies || [];
+    var leadEv = evOf(lead);
 
     var badges = document.createElement("div");
     badges.className = "pv-card__badges";
+    if (state.hasEv && (leadEv.tier === "biz" || leadEv.tier === "fold")) {
+      badges.appendChild(evPill(leadEv));
+    }
+    if (state.hasEv && hasDart(a, lead)) badges.appendChild(dartPill());
     if (isFreshArticle(a)) {
       var freshBadge = document.createElement("span");
       freshBadge.className = "pv-badge-pill pv-badge-pill--new";
@@ -412,6 +649,11 @@
       body.appendChild(relWrap);
     }
 
+    if (state.hasEv && lead) {
+      var others = sameNewsOthers(a, lead);
+      if (others.length) body.appendChild(sameNewsBlock(others));
+    }
+
     var meta = document.createElement("div");
     meta.className = "pv-card__meta";
     var left = document.createElement("span");
@@ -448,8 +690,13 @@
     opts = opts || {};
     var filtered = getFiltered();
     renderCounts(filtered.length);
+    if (state.hasEv) updateFoldToggle(countFoldHidden());
     updateFeedTitle();
-    renderSidePanel(filtered);
+    // 담당 고객 목록은 곁가지/주가만 있는 고객도 남기도록 피드 접기 전 목록으로 만든다
+    renderSidePanel(state.hasEv ? state.articles.filter(function (a) {
+      if (state.majorOnly && !a.major) return false;
+      return !hasLinkLevelFilters() || getMatchingLinks(a).length > 0;
+    }) : filtered);
     updateResetState();
 
     var visible = filtered.slice(0, state.visibleCount);
@@ -458,6 +705,26 @@
     if (filtered.length === 0) {
       el.articleList.innerHTML = "";
       el.emptyState.hidden = false;
+      var rosterN = (state.roster && !state.majorOnly &&
+        (state.selectedTeam !== "전체" || state.selectedCell !== "전체" || state.selectedRep !== "전체" || state.searchText)) ? rosterCountFor() : 0;
+      if (rosterN > 0) {
+        var foldN = state.hasEv && !state.showFold ? countFoldHidden() : 0;
+        var btns = [];
+        if (foldN > 0) {
+          btns.push(["곁가지/주가 기사 " + foldN + "건 보기", function () {
+            state.showFold = true;
+            var cb = document.getElementById("nwShowFold");
+            if (cb) cb.checked = true;
+            applyFiltersAndRender();
+          }]);
+        }
+        btns.push(["필터 전체 해제", resetAllFilters]);
+        fillStateBox(el.emptyState, "최근 기사 없음 (담당 고객 " + rosterN.toLocaleString("ko-KR") + "곳)",
+          "담당 고객의 새 기사가 들어오면 여기에 보입니다. 기사는 매일 밤사이 새로 모읍니다.", btns);
+        el.loadMoreBtn.hidden = true;
+        state.prevIds = [];
+        return;
+      }
       fillStateBox(el.emptyState, "조건에 맞는 고객 기사가 없습니다", "검색어 또는 필터를 다시 확인해 주세요.", [
         ["필터 전체 해제", resetAllFilters],
         ["검색어 지우기", function () {
@@ -546,7 +813,16 @@
         var meta = [].concat(l.team || [], (l.reps || []).slice(0, 1)).filter(Boolean).join("/");
         if (meta) label = l.name + " (" + meta + ")";
       }
-      return { code: code, name: l.name, label: label, count: countByCode[code] || 0 };
+      var item = { code: code, name: l.name, label: label, count: countByCode[code] || 0 };
+      if (state.hasEv) {
+        // 2026-11-24: 숫자는 기사 수 대신 사건 수(같은 소식은 1건). 사업 소식이 있으면 사업 소식 수를 민트로
+        var ec = companyEvCounts(code);
+        item.biz = ec.biz;
+        item.count = ec.biz || (ec.gen + ec.fold);
+      }
+      return item;
+    }).filter(function (it) {
+      return !state.bizOnly || it.biz > 0;
     }).sort(function (a, b) { return a.label.localeCompare(b.label, "ko"); });
 
     el.sideCount.textContent = items.length ? " " + items.length.toLocaleString("ko-KR") : "";
@@ -560,11 +836,11 @@
     }
 
     items.forEach(function (item) {
-      el.companyList.appendChild(buildCompanyItem(item.code, item.name, item.label, iconInitials(item.name), item.count));
+      el.companyList.appendChild(buildCompanyItem(item.code, item.name, item.label, iconInitials(item.name), item.count, item.biz));
     });
   }
 
-  function buildCompanyItem(code, name, label, iconText, count) {
+  function buildCompanyItem(code, name, label, iconText, count, biz) {
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "pv-company-item" + (code === state.currentCode ? " is-current" : "");
@@ -579,8 +855,9 @@
     btn.appendChild(span);
     if (count) {
       var n = document.createElement("span");
-      n.className = "nw-item-n";
+      n.className = "nw-item-n" + (biz ? " nw-item-n--biz" : "");
       n.textContent = count.toLocaleString("ko-KR");
+      if (biz) n.title = "사업 소식 " + biz + "건";
       btn.appendChild(n);
     }
     btn.addEventListener("click", function () {
@@ -645,6 +922,11 @@
     var firstLink = first ? (first.company_links || []).filter(function (l) { return (l.code || l.name) === code; })[0] : null;
     var baseMetaParts = firstLink ? [].concat(firstLink.team || [], firstLink.cell || [], firstLink.reps || []).filter(Boolean) : [];
 
+    if (state.hasEv) {
+      renderCompanyModalEv(code, articles, baseMetaParts);
+      return;
+    }
+
     // company_summaries가 news.json에 아예 없으면(구버전 데이터 / 이번 회차에 AI 요약을 안 돌린 날)
     // 예전처럼 기사 카드 목록을 그대로 보여준다(항상 동작하는 기본 방식으로 자동 전환).
     if (!state.companySummaries) {
@@ -708,6 +990,183 @@
     }
 
     el.companyModalViewAllBtn.hidden = false;
+  }
+
+  // ---------- (2026-11-24) 서랍: 사업 소식(90일) -> AI 요약 -> 일반 소식(20일) -> 접힌 곁가지/주가 ----------
+  // 화면 질문: "방문 전에 이 고객에게 팔 만한 새 일이 있나" -> 폰 첫 화면에 첫 사업 소식이 보이도록 맨 위.
+  function renderCompanyModalEv(code, articles, baseMetaParts) {
+    var rows = { biz: [], gen: [], fold: [] };
+    articles.forEach(function (a) {
+      var l = (a.company_links || []).filter(function (x) { return (x.code || x.name) === code; })[0];
+      if (!l) return;
+      var ev = evOf(l);
+      if (!isLeadEv(ev) || !rows[ev.tier]) return;
+      rows[ev.tier].push({ a: a, l: l, ev: ev, when: ev.date || (a.pubDate_iso || "").slice(0, 10) });
+    });
+    rows.biz.sort(function (x, y) { return x.when < y.when ? 1 : x.when > y.when ? -1 : 0; });
+    ["gen", "fold"].forEach(function (k) {
+      rows[k].sort(function (x, y) { return (y.a.pubDate_iso || "").localeCompare(x.a.pubDate_iso || ""); });
+    });
+
+    el.companyModalMeta.textContent = baseMetaParts.join(" / ");
+
+    // 건수 줄(누르면 그 칸으로 이동)
+    var jump = document.createElement("div");
+    jump.className = "nw-jump";
+    [["biz", "사업 소식"], ["gen", "일반 소식"], ["fold", "곁가지/주가"]].forEach(function (p, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "nw-jump__btn" + (p[0] === "biz" && rows.biz.length ? " is-biz" : "");
+      b.textContent = p[1] + " " + rows[p[0]].length;
+      b.disabled = !rows[p[0]].length;
+      b.addEventListener("click", function () {
+        var t = document.getElementById("nwSec-" + p[0]);
+        if (!t) return;
+        if (t.tagName === "DETAILS") t.open = true;
+        t.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
+      });
+      jump.appendChild(b);
+    });
+    el.companyModalBody.appendChild(jump);
+
+    // 1) 사업 소식
+    var bizSec = sectionBox("biz", "사업 소식", "최근 " + state.bizDays + "일 / 수주, 증설, 설비, 신제품, 자동화");
+    if (rows.biz.length) {
+      rows.biz.forEach(function (r) { bizSec.appendChild(buildEventItem(r)); });
+    } else {
+      var none = document.createElement("p");
+      none.className = "nw-none";
+      none.textContent = "최근 " + state.bizDays + "일 동안 확인된 사업 소식이 없습니다.";
+      bizSec.appendChild(none);
+    }
+    el.companyModalBody.appendChild(bizSec);
+
+    // 2) AI 요약 (있을 때만)
+    var entry = state.companySummaries ? state.companySummaries[code] : null;
+    var NO_RELEVANT_NEWS_TEXT = "최근 이 고객사와 직접 관련된 뚜렷한 소식은 없습니다.";
+    if (entry && entry.summary && entry.summary !== NO_RELEVANT_NEWS_TEXT) {
+      var summaryBox = document.createElement("div");
+      summaryBox.className = "pv-company-modal__summary-box";
+      var badge = document.createElement("span");
+      badge.className = "pv-company-modal__summary-badge";
+      badge.appendChild(svgIcon("i-spark", 13));
+      badge.appendChild(document.createTextNode("AI 요약"));
+      var summaryText = document.createElement("p");
+      summaryText.className = "pv-company-modal__summary-text";
+      summaryText.textContent = entry.summary;
+      var summaryMeta = document.createElement("p");
+      summaryMeta.className = "pv-company-modal__summary-meta";
+      summaryMeta.textContent = "기사 " + (entry.based_on || 0) + "건 기준 / 생성 " + fmtDateTime(entry.generated_at, true);
+      summaryBox.appendChild(badge);
+      summaryBox.appendChild(summaryText);
+      summaryBox.appendChild(summaryMeta);
+      el.companyModalBody.appendChild(summaryBox);
+    }
+
+    // 3) 일반 소식
+    if (rows.gen.length) {
+      var genSec = sectionBox("gen", "일반 소식", "최근 " + (state.lookbackDays || 20) + "일 / 인사, 행사, 협력 등");
+      var refs = document.createElement("div");
+      refs.className = "pv-company-modal__refs";
+      rows.gen.forEach(function (r) { refs.appendChild(buildCompanyModalRefItem(r.a)); });
+      genSec.appendChild(refs);
+      el.companyModalBody.appendChild(genSec);
+    }
+
+    // 4) 곁가지/주가 (접어서)
+    if (rows.fold.length) {
+      var det = document.createElement("details");
+      det.className = "nw-fold";
+      det.id = "nwSec-fold";
+      var sum = document.createElement("summary");
+      var st = document.createElement("span");
+      st.className = "nw-fold__t";
+      st.textContent = "곁가지/주가 기사 " + rows.fold.length + "건";
+      var ss = document.createElement("span");
+      ss.className = "nw-fold__s";
+      ss.textContent = "다른 회사 기사에 잠깐 언급되거나 주가/실적 소식";
+      sum.appendChild(st);
+      sum.appendChild(ss);
+      det.appendChild(sum);
+      var frefs = document.createElement("div");
+      frefs.className = "pv-company-modal__refs";
+      rows.fold.forEach(function (r) {
+        var it = buildCompanyModalRefItem(r.a);
+        var meta = it.querySelector(".pv-company-modal__ref-item-meta");
+        if (meta) meta.textContent = (r.ev.type === "실적/주가" ? "주가/실적" : "곁가지 언급") + " / " + meta.textContent;
+        frefs.appendChild(it);
+      });
+      det.appendChild(frefs);
+      el.companyModalBody.appendChild(det);
+    }
+
+    if (!articles.length) {
+      var empty = document.createElement("p");
+      empty.className = "pv-company-modal__empty";
+      empty.textContent = "최근 수집된 기사가 없습니다.";
+      el.companyModalBody.appendChild(empty);
+    }
+    el.companyModalViewAllBtn.hidden = articles.length === 0;
+  }
+
+  function sectionBox(key, title, sub) {
+    var sec = document.createElement("section");
+    sec.className = "nw-sec";
+    sec.id = "nwSec-" + key;
+    var h = document.createElement("div");
+    h.className = "nw-sec__h";
+    var t = document.createElement("h4");
+    t.textContent = title;
+    var s = document.createElement("span");
+    s.textContent = sub;
+    h.appendChild(t);
+    h.appendChild(s);
+    sec.appendChild(h);
+    return sec;
+  }
+
+  function buildEventItem(r) {
+    var a = r.a, ev = r.ev;
+    var item = document.createElement("div");
+    item.className = "nw-evt";
+    var top = document.createElement("div");
+    top.className = "nw-evt__top";
+    top.appendChild(evPill(ev));
+    if (hasDart(a, r.l)) top.appendChild(dartPill());
+    var dl = eventDateLabel(a, ev);
+    var d = document.createElement("span");
+    d.className = "nw-evt__date" + (dl.old ? " is-old" : "");
+    d.textContent = dl.text;
+    top.appendChild(d);
+    item.appendChild(top);
+
+    var href = a.originallink || a.link || "";
+    var title = document.createElement(href ? "a" : "p");
+    title.className = "nw-evt__title";
+    title.textContent = a.title || "";
+    if (href) { title.href = href; title.target = "_blank"; title.rel = "noopener noreferrer"; }
+    item.appendChild(title);
+
+    if (quoteAddsInfo(ev, a)) {
+      var q = document.createElement("button");
+      q.type = "button";
+      q.className = "nw-evt__quote";
+      q.textContent = "기사 속 근거: " + ev.quote;
+      q.title = ev.quote;
+      q.addEventListener("click", function () { q.classList.toggle("is-open"); });
+      item.appendChild(q);
+    }
+
+    var foot = document.createElement("div");
+    foot.className = "nw-evt__foot";
+    var m = document.createElement("span");
+    m.className = "nw-evt__meta";
+    m.textContent = pressAndDate(a);
+    foot.appendChild(m);
+    item.appendChild(foot);
+    var others = sameNewsOthers(a, r.l);
+    if (others.length) item.appendChild(sameNewsBlock(others));
+    return item;
   }
 
   // AI 요약 데이터 자체가 없는(구버전) news.json을 만났을 때만 쓰는 예전 방식 렌더러.
@@ -834,6 +1293,11 @@
       });
     });
 
+    (state.roster || []).forEach(function (l) {
+      (l.reps || []).forEach(function (rep) {
+        if (rep && !repMap[rep]) repMap[rep] = { team: l.team, cell: l.cell };
+      });
+    });
     var repResults = Object.keys(repMap)
       .filter(function (r) { return r.toLowerCase().indexOf(t) !== -1; })
       .slice(0, 5)
@@ -1128,8 +1592,21 @@
         // 팝업이 기존 방식(기사 목록)으로 자동 전환되도록 한다. 빈 객체({})는 "기능은 켜져 있지만
         // 이 고객사는 최근 기사가 없다"는 뜻이므로 null과 구분해야 한다.
         state.companySummaries = data.company_summaries || null;
+        state.roster = Array.isArray(data.roster) ? data.roster : null;
         state.summaryLookbackDays = data.summary_lookback_days || null;
         state.loadError = null;
+
+        // 2026-11-24 사건 분류가 있는 데이터면: 피드는 최신순, 같은 소식 묶음/회사별 사건 수 준비
+        state.hasEv = state.articles.some(function (a) {
+          return (a.company_links || []).some(function (l) { return !!l.ev; });
+        });
+        state.bizDays = data.biz_days || 90;
+        if (state.hasEv) {
+          state.articles.sort(function (x, y) { return (y.pubDate_iso || "").localeCompare(x.pubDate_iso || ""); });
+          buildGroupIndex();
+          buildEvCounts();
+          ensureEvControls();
+        }
 
         buildFilterOptions();
         renderStatus();

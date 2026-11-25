@@ -29,7 +29,19 @@
      true 면 일반 기사로 올리고(judged_by="ai"), false 면 이유와 함께 보류함에 남긴다.
      (AI_JUDGE_MAX 기본 100건/회, AI_JUDGE_BATCH 기본 10건/호출, 오류 시 그대로 보류)
    - 끄기: 환경변수 MATCH_QUALITY=off (AI 판정만 끄기: AI_JUDGE=off)
-10. data/news.json 으로 결과 저장 (GitHub Pages 정적 사이트에서 fetch 하여 사용)
+10. (2026-11-24) 놓친 기사 줄이기 1단계
+   - 누적 보관(store/archive.json, ARCHIVE_DAYS 기본 180일): 매일 채택 기사를 쌓고, 화면은 사업 사건 BIZ_DAYS(90일) / 일반 NEWS_LOOKBACK_DAYS(20일)
+     (20일보다 오래된 기사는 제목/요약에 사업 단어가 있을 때만 보관 -> 사업 사건으로 판정되면 90일까지 보임)
+   - 페이지 넘김: 첫 페이지 100건이 전부 기준 시각 안이면 start=101, 201 ... 901 까지(최대 NEWS_MAX_PAGES=10)
+     기준 시각 = 처음엔 NEWS_LOOKBACK_DAYS 전, 이후엔 마지막 수집 시각 - 2일(store/fetch_state.json)
+   - 사건 분류(scripts/event_classify.py, Haiku): 같은 회사/역할/사건 종류/사건 날짜/근거 인용, 새 회사-기사 쌍만(캐시)
+     사업 사건은 위로, 곁가지/주가는 접어서, 같은 사건은 묶어서(scripts/news_view.py)
+   - 증시어(global_exclude_keywords)는 분류가 켜져 있으면 삭제 대신 신호(stock=true)로만 씀. 분류가 꺼지면 예전처럼 제외
+   - 제외 사유별 건수 + 표본(스니펫 이름 없음/나열형)을 store/filter_log.json 에 저장 (화면 영향 없음)
+   - 끄기: NEWS_STORE=off (보관/분류/90일 전부 끄고 예전 방식), EVENT_CLASSIFY=off (분류만), NEWS_PAGING=off (페이지 넘김만)
+   - DART 공시(scripts/dart_source.py, config/dart_corp_map.json): 공급계약/신규시설투자/유형자산 취득/타법인주식 취득을 사업 소식으로,
+     화면에 "DART" 스티커. 같은 사건 뉴스와 "같은 소식"으로 묶음. 끄기 DART_SOURCE=off, 키 DART_API_KEY 없으면 건너뜀
+11. data/news.json 으로 결과 저장 (GitHub Pages 정적 사이트에서 fetch 하여 사용)
 
 환경변수
 - NAVER_CLIENT_ID, NAVER_CLIENT_SECRET : 네이버 개발자센터에서 발급받은 값 (필수)
@@ -51,6 +63,7 @@ import re
 import html
 import time
 import difflib
+import hashlib
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from urllib.parse import urlparse
@@ -59,10 +72,15 @@ from urllib import error as urlerror
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import match_quality as mq  # noqa: E402
+import news_store as ns  # noqa: E402
+import news_view as nv  # noqa: E402
+import event_classify as ec  # noqa: E402
+import dart_source as ds  # noqa: E402
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_DIR = os.path.join(BASE_DIR, "config")
 DATA_DIR = os.path.join(BASE_DIR, "data")
+STORE_DIR = os.path.join(BASE_DIR, "store")
 
 NAVER_API_URL = "https://openapi.naver.com/v1/search/news.json"
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
@@ -264,6 +282,26 @@ def context_near_name(title, description, names, strict, keywords, window):
     return False
 
 
+def relevance_reason(title, description, query, strict=False):
+    """is_relevant_article 와 같은 판정을 하되 이유를 돌려준다: 'ok' / 'no_name'(제목/요약에 이름 없음) / 'list'(나열형)"""
+    if not query or not query.strip():
+        return "ok"
+    q = query.strip().lower()
+    title_l = (title or "").lower()
+    desc = description or ""
+    desc_l = desc.lower()
+    t_idx = find_name(title_l, q, strict)
+    idx = find_name(desc_l, q, strict)
+    if t_idx < 0 and idx < 0:
+        return "no_name"
+    if t_idx >= 0:
+        return "ok"
+    window = desc[max(0, idx - 20):min(len(desc), idx + len(q) + 20)]
+    if sum(window.count(sep) for sep in LIST_SEPARATORS) >= 2:
+        return "list"
+    return "ok"
+
+
 def is_relevant_article(title, description, query, strict=False):
     """검색어(고객명/별칭)가 기사에서 실질적으로 다뤄지는 기사인지 확인.
 
@@ -337,8 +375,8 @@ def parse_pubdate(pubdate_str):
         return None
 
 
-def fetch_company_news(company_query, client_id, client_secret, display=100, retries=3):
-    params = f"query={urlrequest.quote(company_query)}&display={display}&sort=date"
+def fetch_company_news(company_query, client_id, client_secret, display=100, retries=3, start=1):
+    params = f"query={urlrequest.quote(company_query)}&display={display}&start={start}&sort=date"
     url = f"{NAVER_API_URL}?{params}"
     req = urlrequest.Request(url)
     req.add_header("X-Naver-Client-Id", client_id)
@@ -377,6 +415,41 @@ def is_duplicate(article, seen_articles, title_similarity_threshold=0.82):
             if ratio >= title_similarity_threshold:
                 return existing
     return None
+
+
+class DupIndex:
+    """is_duplicate 와 같은 판정(같은 링크 또는 같은 날짜+제목 유사도)을 링크/날짜 색인으로 빠르게.
+    (2026-11-24 수집 기간이 길어져 기사 수가 늘어도 느려지지 않게)"""
+
+    def __init__(self, threshold=0.82):
+        self.threshold = threshold
+        self.by_link = {}
+        self.by_date = {}
+
+    def find(self, article):
+        ol = article.get("originallink")
+        if ol and ol in self.by_link:
+            return self.by_link[ol]
+        if article.get("link") in self.by_link:
+            return self.by_link[article["link"]]
+        for ex in self.by_date.get(article.get("pubDate_iso", "")[:10], []):
+            if difflib.SequenceMatcher(None, article["_norm_title"], ex["_norm_title"]).ratio() >= self.threshold:
+                return ex
+        return None
+
+    def add(self, article):
+        for k in (article.get("originallink"), article.get("link")):
+            if k:
+                self.by_link.setdefault(k, article)
+        self.by_date.setdefault(article.get("pubDate_iso", "")[:10], []).append(article)
+
+    def remove(self, article):
+        for k in (article.get("originallink"), article.get("link")):
+            if k and self.by_link.get(k) is article:
+                del self.by_link[k]
+        lst = self.by_date.get(article.get("pubDate_iso", "")[:10], [])
+        if article in lst:
+            lst.remove(article)
 
 
 def call_anthropic_summary(prompt, api_key, retries=3):
@@ -562,7 +635,7 @@ def build_summary_prompt(company_name, articles, industry=None):
 
 
 def generate_company_summaries(all_articles, api_key, lookback_days=20, max_articles=5, request_delay=0.3,
-                               industries=None):
+                               industries=None, material=None, prev=None):
     """최근 lookback_days일 이내 기사가 있는 고객사만 골라 Claude Haiku로 2~3문장 요약을 생성한다.
     all_articles는 이미 '우선순위 태그 -> 최신순'으로 정렬돼 있는데, 이 전역 순서만 그대로 잘라서
     상위 max_articles건을 쓰면 문제가 생길 수 있다: 예를 들어 "현대트랜시스" 같은 대기업 고객은
@@ -586,7 +659,12 @@ def generate_company_summaries(all_articles, api_key, lookback_days=20, max_arti
     cutoff = datetime.now(KST) - timedelta(days=lookback_days)
     by_company = {}  # code -> articles
     company_names = {}  # code -> companies.json 원본 표기 이름 (프롬프트 생성용)
-    for a in all_articles:
+    # 2026-11-24: material(회사코드 -> 사업 사건 먼저 정렬된 기사 목록)이 오면 그대로 쓴다(곁가지/주가 제외, 같은 사건은 대표만)
+    for code, arts in (material or {}).items():
+        if arts:
+            by_company[code] = arts
+            company_names[code] = next((l.get("name") for l in arts[0].get("company_links", []) if l.get("code") == code), code)
+    for a in ([] if material is not None else all_articles):
         try:
             pub_dt = datetime.fromisoformat(a["pubDate_iso"])
         except Exception:
@@ -608,10 +686,16 @@ def generate_company_summaries(all_articles, api_key, lookback_days=20, max_arti
     print(f"\nAI 요약 생성 대상: {total}개 고객사 (최근 {lookback_days}일 이내 기사 보유)")
     for i, (code, articles) in enumerate(by_company.items(), start=1):
         company_name = company_names.get(code, code)
-        ranked_articles = sorted(
+        ranked_articles = articles if material is not None else sorted(
             articles, key=lambda a: 0 if company_title_hit(a, code, company_name) else 1
         )
         top_articles = ranked_articles[:max_articles]
+        # 2026-11-24: 재료 기사(링크 목록)가 어제와 같으면 어제 요약을 그대로 씀(같은 요약을 매일 다시 만드는 비용 절약)
+        basis = hashlib.sha1("|".join(sorted((a.get("originallink") or a.get("link") or "") for a in top_articles)).encode("utf-8")).hexdigest()[:16]
+        old = (prev or {}).get(code)
+        if old and old.get("basis") == basis and old.get("summary"):
+            summaries[code] = old
+            continue
         prompt = build_summary_prompt(company_name, top_articles, (industries or {}).get(code))
         print(f"  [{i}/{total}] 요약 생성: {company_name} (code={code}, {len(top_articles)}건 기준)")
         summary_text = call_anthropic_summary(prompt, api_key)
@@ -620,16 +704,37 @@ def generate_company_summaries(all_articles, api_key, lookback_days=20, max_arti
                 "summary": summary_text,
                 "based_on": len(top_articles),
                 "generated_at": datetime.now(KST).isoformat(),
+                "basis": basis,
             }
         time.sleep(request_delay)
     print(f"AI 요약 생성 완료: {len(summaries)}/{total}개 고객사 성공")
     return summaries
 
 
-def main():
+def classify_aliases(company, override):
+    """사건 분류에 같이 보내는 '기사에서 쓰는 이름' (사내 등록명 SKON -> 기사 표기 SK온 등). 최대 4개"""
+    if not company:
+        return []
+    o = override or {}
+    names = list(o.get("match_names") or o.get("search_queries") or [company.get("query") or company.get("name", "")])
+    names.append(display_company_name(company.get("name", "")))
+    out = []
+    for n in names:
+        n = (n or "").strip()
+        if n and n not in out:
+            out.append(n)
+    return out[:4]
+
+
+def env_on(name, default="on"):
+    return os.environ.get(name, default).lower() != "off"
+
+
+def main(fetch_page_fn=None, now=None):
+    """fetch_page_fn(query, start, display) 는 테스트/재현용(네이버 대신). now 도 테스트용."""
     client_id = os.environ.get("NAVER_CLIENT_ID")
     client_secret = os.environ.get("NAVER_CLIENT_SECRET")
-    if not client_id or not client_secret:
+    if fetch_page_fn is None and (not client_id or not client_secret):
         print(
             "[오류] NAVER_CLIENT_ID / NAVER_CLIENT_SECRET 환경변수가 설정되어 있지 않습니다.\n"
             "네이버 개발자센터(https://developers.naver.com)에서 애플리케이션을 등록해 "
@@ -637,6 +742,9 @@ def main():
             file=sys.stderr,
         )
         sys.exit(1)
+    if fetch_page_fn is None:
+        def fetch_page_fn(q, start, disp):
+            return fetch_company_news(q, client_id, client_secret, display=disp, start=start)
 
     lookback_days = int(os.environ.get("NEWS_LOOKBACK_DAYS", "7"))
     display = min(int(os.environ.get("NEWS_DISPLAY_PER_QUERY", "100")), 100)
@@ -644,12 +752,19 @@ def main():
 
     anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY")
     summary_lookback_days = int(os.environ.get("SUMMARY_LOOKBACK_DAYS", "20"))
-    # 2026-08-25 수정: 기존 5건에서 8건으로 상향. company_title_hit() 재정렬로 "회사 자신이
-    # 주인공인 기사"가 앞으로 오게 됐지만, 그런 기사가 여러 건 있는 고객사(예: 보도자료가
-    # 여러 언론사에 살짝 다른 제목으로 실린 경우)는 5건보다 조금 더 여유를 줘야 AI가 판단할
-    # 재료가 충분해진다. Haiku 비용은 미미하게 늘어나는 수준이라 큰 부담은 없다.
+    # 2026-08-25 수정: 기존 5건에서 8건으로 상향 (회사 자신이 주인공인 기사 여러 건 대비)
     summary_max_articles = int(os.environ.get("SUMMARY_MAX_ARTICLES", "8"))
     summary_request_delay = float(os.environ.get("SUMMARY_REQUEST_DELAY", "0.3"))
+
+    # 2026-11-24 놓친 기사 줄이기 1단계 설정
+    store_on = env_on("NEWS_STORE")
+    paging_on = env_on("NEWS_PAGING")
+    classify_on = store_on and env_on("EVENT_CLASSIFY") and bool(anthropic_api_key)
+    archive_days = int(os.environ.get("ARCHIVE_DAYS", "180"))
+    biz_days = int(os.environ.get("BIZ_DAYS", "90"))
+    max_pages = int(os.environ.get("NEWS_MAX_PAGES", "10")) if paging_on else 1
+    overlap_days = int(os.environ.get("NEWS_OVERLAP_DAYS", "2"))
+    event_model = os.environ.get("EVENT_MODEL", ANTHROPIC_MODEL)
 
     companies_cfg = load_json("companies.json")["companies"]
     media_cfg = load_json("major_media.json")
@@ -658,7 +773,14 @@ def main():
     global_exclude_keywords = load_global_exclude_keywords()
     priority_order = keyword_cfg.get("priority_order", [])
 
-    cutoff = datetime.now(KST) - timedelta(days=lookback_days)
+    now = now or datetime.now(KST)
+    cutoff = now - timedelta(days=lookback_days)
+    # 보관을 켜면 20일보다 오래된 기사도 보관 기간까지 받아 두되, 사업 단어가 있을 때만(사업 사건만 90일 표시하므로)
+    collect_cutoff = now - timedelta(days=archive_days) if store_on else cutoff
+
+    fetch_state = ns.load_json_file(os.path.join(STORE_DIR, "fetch_state.json"), {}) if store_on else {}
+    flog = ns.FilterLog(sample_n=int(os.environ.get("FILTER_SAMPLE_N", "40")), seed=now.strftime("%Y%m%d"))
+    page_stats = {"queries": 0, "calls": 0, "multi_page_queries": 0, "capped_queries": []}
 
     # 2026-11-23 매칭 품질 판정 준비
     match_quality_on = os.environ.get("MATCH_QUALITY", "on").lower() != "off"
@@ -668,7 +790,8 @@ def main():
     match_stats = {"ok": 0, "uncertain": 0, "reject": 0, "common_mode": []}
 
     all_articles = []
-    seen_articles = []  # 전역 중복 체크용 (링크/유사 제목)
+    dup_index = DupIndex()  # 전역 중복 체크용 (링크/유사 제목)
+    fetch_cache = {}  # 같은 검색어를 여러 사업장이 쓰면 한 번만 받음
 
     total = len(companies_cfg)
     for i, company in enumerate(companies_cfg, start=1):
@@ -680,7 +803,6 @@ def main():
         cell = company.get("cell", [])
         ext_rep = company.get("ext_rep", [])
         # 영업담당(reps) 표시/필터는 외근영업만 사용한다.
-        # 내근영업까지 합치면 같은 고객의 기사가 영업명 필터상 여러 이름으로 흩어져 보이는 문제가 있어 제외한다.
         reps = sorted(set([r for r in ext_rep if r]))
 
         override = overrides_cfg.get(code)
@@ -689,8 +811,6 @@ def main():
         else:
             search_queries = [query]
         # 2026-09-29 추가: "검색할 말"과 "기사에 꼭 있어야 하는 이름"을 분리.
-        # 예) 검색은 "현대차 자동화"로, 기사 판정은 "현대차"/"현대자동차"가 있는지로.
-        # match_names 가 없으면 예전처럼 search_queries 를 그대로 쓴다.
         match_names = (override.get("match_names") if override else None) or search_queries
         strict_name = bool(override.get("strict_name")) if override else False
         context_window = int(override.get("context_window") or 0) if override else 0
@@ -701,12 +821,36 @@ def main():
 
         items_by_key = {}
         for sq in search_queries:
-            for item in fetch_company_news(sq, client_id, client_secret, display=display):
+            if sq in fetch_cache:
+                got = fetch_cache[sq]
+            else:
+                boundary = ns.boundary_for(fetch_state.get(sq), now, lookback_days, overlap_days)
+
+                def _page(start, _sq=sq):
+                    if start > 1:
+                        time.sleep(request_delay)
+                    return fetch_page_fn(_sq, start, display)
+
+                got, info = ns.fetch_paged(_page, lambda it: parse_pubdate(it.get("pubDate", "")), boundary,
+                                           display=display, max_pages=max_pages)
+                fetch_cache[sq] = got
+                page_stats["queries"] += 1
+                page_stats["calls"] += info["pages"]
+                if info["pages"] > 1:
+                    page_stats["multi_page_queries"] += 1
+                    print(f"       페이지 넘김 {info['pages']}쪽 (멈춤: {info['stop']})")
+                if info["stop"] == "cap" and max_pages > 1:
+                    page_stats["capped_queries"].append(sq)
+                    print(f"       [안내] {max_pages}쪽까지 받아도 기준 시각에 못 미침(수집 미완료)")
+                if got or info["stop"] in ("short", "boundary", "empty"):
+                    fetch_state[sq] = {"last_fetch": now.isoformat(), "pages": info["pages"], "stop": info["stop"]}
+                time.sleep(request_delay)
+            for item in got:
                 key = item.get("link") or item.get("originallink") or item.get("title")
                 if key and key not in items_by_key:
                     items_by_key[key] = item
-            time.sleep(request_delay)
         items = list(items_by_key.values())
+        flog.add("received", len(items))
 
         # 2026-11-23: 위험 이름 회사는 이번 수집분에서 이름이 일반 단어/다른 실체로 쓰인 비율을 재서
         # 절반 이상이면 '일반명사 모드'(법인표기 또는 제목+업종어만 인정)로 판정한다.
@@ -724,29 +868,41 @@ def main():
             pub_dt = parse_pubdate(item.get("pubDate", ""))
             if pub_dt is None:
                 continue
-            if pub_dt < cutoff:
-                skipped_old += 1
-                continue
-
             title = clean_text(item.get("title", ""))
             description = clean_text(item.get("description", ""))
             combined_text = f"{title} {description}"
 
-            if not any(is_relevant_article(title, description, mn, strict_name) for mn in match_names):
+            if pub_dt < collect_cutoff or (pub_dt < cutoff and not ec.biz_hint(title, description)):
+                skipped_old += 1
+                flog.add("old")
+                continue
+
+            reasons = [relevance_reason(title, description, mn, strict_name) for mn in match_names]
+            if "ok" not in reasons:
                 skipped_irrelevant += 1
+                why = "list_type" if "list" in reasons else "no_name"
+                flog.add(why)
+                if pub_dt >= cutoff:
+                    flog.sample(why, {"code": code, "name": name, "title": title, "description": description,
+                                      "link": item.get("originallink") or item.get("link", ""),
+                                      "pubDate": pub_dt.strftime("%Y-%m-%d"),
+                                      "biz_word": ec.biz_hint(title, "")})
                 continue
 
             if context_keywords and not contains_any_keyword(combined_text, context_keywords):
                 skipped_irrelevant += 1
+                flog.add("ctx")
                 continue
 
             if context_keywords and context_window and not context_near_name(
                     title, description, match_names, strict_name, context_keywords, context_window):
                 skipped_irrelevant += 1
+                flog.add("ctxwin")
                 continue
 
             if exclude_keywords and contains_any_keyword(combined_text, exclude_keywords):
                 skipped_irrelevant += 1
+                flog.add("excl")
                 continue
 
             # 2026-11-23 매칭 품질 판정 (단어 경계 / 위험 이름 / 일반명사 모드)
@@ -756,33 +912,34 @@ def main():
                 match_stats[verdict] += 1
                 if verdict == "reject":
                     skipped_irrelevant += 1
+                    flog.add("mq_reject")
                     continue
                 if verdict == "uncertain":
                     skipped_irrelevant += 1
-                    uncertain_articles.append({
-                        "code": code, "name": name, "reason": why,
-                        "industry": list(company.get("industry", []) or []),
-                        "matched_sub_names": find_matched_sub_names(title, description, sub_names),
-                        "title": title, "description": description,
-                        "link": item.get("link", ""),
-                        "originallink": item.get("originallink", "") or item.get("link", ""),
-                        "pubDate_iso": pub_dt.isoformat(),
-                        "pubDate_display": pub_dt.strftime("%Y-%m-%d %H:%M"),
-                        "team": list(team), "cell": list(cell), "reps": list(reps),
-                    })
+                    flog.add("mq_uncertain")
+                    if pub_dt >= cutoff:  # 보류함은 지금처럼 20일 안 기사만
+                        uncertain_articles.append({
+                            "code": code, "name": name, "reason": why,
+                            "industry": list(company.get("industry", []) or []),
+                            "matched_sub_names": find_matched_sub_names(title, description, sub_names),
+                            "title": title, "description": description,
+                            "link": item.get("link", ""),
+                            "originallink": item.get("originallink", "") or item.get("link", ""),
+                            "pubDate_iso": pub_dt.isoformat(),
+                            "pubDate_display": pub_dt.strftime("%Y-%m-%d %H:%M"),
+                            "team": list(team), "cell": list(cell), "reps": list(reps),
+                        })
                     continue
 
-            # 2026-08-25 수정: 전역 "증시노이즈 제외" 목록(코스피/코스닥/주가 등)은 원래
-            # 회사명만 겹치고 내용은 전혀 무관한 증권사 리포트성 잡음을 걸러내기 위한 것이었다.
-            # 그런데 company_overrides.json에 context_keywords(업종 관련 키워드)를 설정해둔
-            # 회사는, 이미 그 키워드로 한 번 더 관련성을 확인했기 때문에 성격이 다르다 — 예를
-            # 들어 "성우하이텍, 상반기 영업익 1196억...코스닥 10위"처럼 정상적인 실적 발표
-            # 기사인데 제목에 "코스닥"이 들어갔다는 이유만으로 걸러지는 문제가 있었다.
-            # 그래서 context_keywords가 설정된 회사는 전역 증시노이즈 제외를 적용하지 않는다
-            # (형님 확인 완료, 2026-08-25).
-            if not context_keywords and contains_any_keyword(combined_text, global_exclude_keywords):
+            # 2026-08-25: context_keywords 가 있는 회사는 전역 증시어 제외를 적용하지 않음(형님 확인 완료).
+            # 2026-11-24: 분류가 켜져 있으면 증시어 기사는 지우지 않고 stock=true 신호만 붙임(접힌 칸 후보)
+            stock_hit = (not context_keywords) and contains_any_keyword(combined_text, global_exclude_keywords)
+            if stock_hit and not classify_on:
                 skipped_stock += 1
+                flog.add("stock_excluded")
                 continue
+            if stock_hit:
+                flog.add("stock_signal")
 
             link = item.get("link", "")
             originallink = item.get("originallink", "") or link
@@ -792,26 +949,7 @@ def main():
             matched_sub_names = find_matched_sub_names(title, description, sub_names)
 
             article = {
-                # 2026-08-24 변경: 예전에는 "company"(단일 문자열)였는데, 같은 브랜드의 여러
-                # 사업장(예: 삼성전자 생산기술연구소/구미공장/광주공장)이 고객 마스터에 각각
-                # 등록돼 있고 검색어가 겹치는 경우, 아래 전역 중복 제거 로직을 통과할 때
-                # 나중에 처리되는 사업장이 관련 기사를 하나도 못 가져가는 문제가 있었다.
-                # "companies"(배열)로 바꾸고, 중복으로 판정된 기사는 버리지 않고 관련된
-                # 모든 회사/팀/셀/담당자를 이 배열에 계속 합쳐서 모든 관련 사업장에 표시되게 한다.
-                #
-                # 2026-08-25 추가 수정: 위 방식대로 team/cell/reps를 그냥 하나의 배열에 계속
-                # 합치기만 하면, "이 기사에 관련된 회사가 누구인지"는 알 수 있어도 "그중 어느
-                # 회사가 어느 팀/셀/담당자 소속인지"라는 연결 정보가 사라진다. 예를 들어 배터리
-                # 장비업체 6곳을 한꺼번에 언급하는 산업 동향 기사 하나가 (주)나인테크(TSC3·이인규)
-                # 와 (주)엠오티(TSC4·김훈)에 동시에 걸리면, team=["TSC3","TSC4"],
-                # reps=["이인규","김훈"]처럼 통째로 섞여버려서 "팀 필터로 TSC4를 고르면 관련
-                # 없는 이인규까지 영업명 목록에 나오는" 문제, "김훈을 검색하면 김훈과 무관한
-                # 나인테크까지 담당 고객 목록에 나오는" 문제가 생겼다. 이를 막기 위해 회사별
-                # 연결 정보를 "company_links" 배열에 별도로 보존한다: 각 원소가
-                # {name, team, cell, reps, matched_sub_names}로, 어느 회사가 어느 팀/셀/
-                # 담당자에 속하는지 끝까지 유지한다. 화면에서 정확한 필터링·검색·고객사별 팝업은
-                # 이 company_links를 기준으로 하고, 아래 team/cell/reps/matched_sub_names(전체
-                # 배열)는 피드 카드에 보여주는 "요약 정보"용으로만 남겨둔다.
+                # 회사별 연결 정보(company_links)를 끝까지 유지 (2026-08-24/08-25/09-07 변경 이력은 git 기록 참고)
                 "companies": [name],
                 "company_links": [{
                     "code": code,
@@ -839,27 +977,18 @@ def main():
                 "tag_color": tag_color,
                 "_norm_title": normalize_title(title),
             }
+            if stock_hit:
+                article["stock"] = True
 
-            dup = is_duplicate(article, seen_articles)
+            dup = dup_index.find(article)
             if dup:
                 skipped_dup += 1
-                # 같은 기사가 다른 회사(주로 같은 브랜드의 다른 사업장, 또는 여러 고객사가
-                # 함께 언급된 산업 동향 기사)에서도 검색된 경우, 그냥 버리지 않고 이 회사를
-                # company_links에 별도 항목으로 추가한다(회사별 팀/셀/담당자 연결 유지).
-                # 화면에 보여줄 "요약용" team/cell/reps/matched_sub_names 배열에도 합쳐 두지만,
-                # 실제 필터링·검색·고객사 팝업은 company_links를 기준으로 동작한다.
-                #
-                # 2026-09-07 수정: 병합 판단 기준을 이름(name)에서 고유 코드(code)로 변경.
-                # companies.json에는 이름은 완전히 같은데 실제로는 서로 다른 회사(고객번호가
-                # 다름)인 경우가 5쌍 있다(예: "제닉스(주)" 코드 981241(TSC2·ME03·김혁)과 코드
-                # 955240(TSC3·ME06·이인규)). 이름으로 매칭하면 이 둘이 하나의 company_links
-                # 항목으로 합쳐져 team=[TSC2,TSC3]/cell=[ME03,ME06]/reps=[김혁,이인규]처럼
-                # 섞여버리는 문제가 있었다 — 예를 들어 셀=ME03으로 필터링해도 무관한 이인규가
-                # 영업명 드롭다운에 같이 나오는 원인이었다(형님 제보, 2026-09-07 확인).
+                flog.add("dup")
+                # 같은 기사가 다른 회사에서도 검색된 경우 company_links 에 별도 항목으로 추가(코드 기준, 2026-09-07)
                 existing_link = None
-                for link in dup["company_links"]:
-                    if link.get("code") == code:
-                        existing_link = link
+                for lk in dup["company_links"]:
+                    if lk.get("code") == code:
+                        existing_link = lk
                         break
                 if existing_link:
                     for sn in matched_sub_names:
@@ -897,24 +1026,24 @@ def main():
                 for sn in matched_sub_names:
                     if sn not in dup["matched_sub_names"]:
                         dup["matched_sub_names"].append(sn)
-                # 기존 기사가 비메이저이고 새 기사가 메이저 언론사면 본문/링크/언론사 정보만
-                # 메이저 기사로 교체하되, 지금까지 합쳐둔 회사/팀/셀/담당자 정보는 유지한다.
+                if stock_hit:
+                    dup["stock"] = True
+                # 기존 기사가 비메이저이고 새 기사가 메이저 언론사면 본문/링크/언론사 정보만 교체
                 if is_major and not dup["major"]:
-                    article["companies"] = dup["companies"]
-                    article["company_links"] = dup["company_links"]
-                    article["team"] = dup["team"]
-                    article["cell"] = dup["cell"]
-                    article["reps"] = dup["reps"]
-                    article["matched_sub_names"] = dup["matched_sub_names"]
-                    seen_articles.remove(dup)
+                    for f in ("companies", "company_links", "team", "cell", "reps", "matched_sub_names"):
+                        article[f] = dup[f]
+                    if dup.get("stock"):
+                        article["stock"] = True
+                    dup_index.remove(dup)
                     all_articles.remove(dup)
-                    seen_articles.append(article)
+                    dup_index.add(article)
                     all_articles.append(article)
                 continue
 
-            seen_articles.append(article)
+            dup_index.add(article)
             all_articles.append(article)
             kept += 1
+            flog.add("kept")
 
         print(f"       수집 {len(items)} / 채택 {kept} / 중복제외 {skipped_dup} / 기간외제외 {skipped_old} / 나열형제외 {skipped_irrelevant} / 증시노이즈제외 {skipped_stock}")
 
@@ -953,7 +1082,7 @@ def main():
                         "judged_by": "ai", "ai_reason": reason,
                         "_norm_title": normalize_title(u["title"]),
                     }
-                    dup = is_duplicate(art, seen_articles)
+                    dup = dup_index.find(art)
                     if dup:
                         if not any(l.get("code") == u["code"] for l in dup["company_links"]):
                             dup["company_links"].append(link_info)
@@ -963,7 +1092,7 @@ def main():
                                 if v not in dup[key]:
                                     dup[key].append(v)
                     else:
-                        seen_articles.append(art)
+                        dup_index.add(art)
                         all_articles.append(art)
                 except Exception as e:  # 한 건 오류로 전체 실행이 멈추지 않게
                     promoted_ids.discard(id(u))
@@ -972,24 +1101,136 @@ def main():
         else:
             print("\n[안내] 보류함 AI 판정 건너뜀 (ANTHROPIC_API_KEY 없음 또는 AI_JUDGE=off)")
 
-    # 우선순위 정렬: 먼저 최신순으로 정렬한 뒤, 태그 우선순위(투자>수주>협업>자동화>일반)로 안정 정렬
-    # (동일 우선순위 그룹 내에서는 최신 기사가 위로 오도록 stable sort 활용)
-    all_articles.sort(key=lambda a: a["pubDate_iso"], reverse=True)
-    all_articles.sort(key=lambda a: (
-        priority_order.index(a["tag_key"]) if a["tag_key"] in priority_order else len(priority_order)
-    ))
-
-    # 내부 필드 제거
     for a in all_articles:
         a.pop("_norm_title", None)
 
     output = {
-        "generated_at": datetime.now(KST).isoformat(),
+        "generated_at": now.isoformat(),
         "lookback_days": lookback_days,
         "companies": [c["name"] for c in companies_cfg],
-        "total_articles": len(all_articles),
-        "articles": all_articles,
+        # 2026-11-25 툴 개수 의뢰 #14: 기사가 0건인 담당자도 팀/셀/영업명 목록에 나오도록 전체 고객 명단(기사와 같은 외근영업 기준)
+        "roster": [{"code": c.get("code", ""), "name": c["name"], "team": list(c.get("team", [])),
+                    "cell": list(c.get("cell", [])), "reps": sorted(set(r for r in c.get("ext_rep", []) if r))}
+                   for c in companies_cfg],
     }
+
+    if store_on:
+        # ---- 2026-11-24 보관소에 합치고, 새 회사-기사 쌍만 사건 분류, 화면 목록 만들기 ----
+        arch_path = os.path.join(STORE_DIR, "archive.json")
+        cache_path = os.path.join(STORE_DIR, "classify_cache.json")
+        archive = ns.load_json_file(arch_path, {"version": 1, "articles": {}})
+        cache = ns.load_json_file(cache_path, {}).get("items", {})
+        added = ns.merge_into_archive(archive, all_articles, now.isoformat())
+        pruned = ns.prune_archive(archive, now, archive_days)
+        print(f"\n보관소: 새 기사 {added} / 기간 지나 삭제 {pruned} / 보관 {len(archive['articles'])}")
+
+        # ---- 2026-11-24 DART 공시(사업 소식 출처, 화면에 "DART" 스티커). 실패해도 뉴스 수집은 그대로 ----
+        dart_stats = {"on": False}
+        dart_key = os.environ.get("DART_API_KEY")
+        if env_on("DART_SOURCE") and dart_key:
+            try:
+                dmap = ds.load_map(os.path.join(CONFIG_DIR, "dart_corp_map.json"))
+                code_by_corp = {}
+                for g, cc in dmap.items():
+                    code_by_corp.setdefault(cc, []).append(g)
+                dstate_path = os.path.join(STORE_DIR, "dart_state.json")
+                dstate = ns.load_json_file(dstate_path, {})
+                ditems, dst, dstate = ds.fetch_disclosures(
+                    dart_key, list(code_by_corp), dstate, now, days=biz_days,
+                    sleep=float(os.environ.get("DART_SLEEP", "0.35")), max_calls=int(os.environ.get("DART_MAX_CALLS", "400")))
+                darts, dres = ds.to_articles(ditems, code_by_corp, {c.get("code"): c for c in companies_cfg}, KST)
+                dadded = ns.merge_into_archive(archive, darts, now.isoformat())
+                for k, v in dres.items():
+                    if k not in cache:
+                        v["t"] = now.strftime("%Y-%m-%d")
+                        cache[k] = v
+                ns.save_json_file(dstate_path, dstate, compact=False)
+                dart_stats = {"on": True, "mode": dst["mode"], "calls": dst["calls"], "errors": dst["errors"],
+                              "listed": dst["items"], "events": len(darts), "new": dadded}
+                print(f"DART: 방식 {dst['mode']} / 호출 {dst['calls']} / 오류 {dst['errors']} / 사업 공시 {len(darts)} / 새로 보관 {dadded}")
+            except Exception as e:  # DART 오류는 절대 실행을 멈추지 않음
+                dart_stats = {"on": True, "error": type(e).__name__}
+                print(f"[경고] DART 단계 건너뜀: {type(e).__name__}", file=sys.stderr)
+        else:
+            print("[안내] DART 공시 건너뜀 (DART_SOURCE=off 또는 DART_API_KEY 없음)")
+
+        ev_stats = {"on": classify_on}
+        if classify_on:
+            todo = []
+            gen_cut = cutoff.isoformat()
+            ind_by_code = {c.get("code"): c.get("industry", []) for c in companies_cfg}
+            comp_by_code = {c.get("code"): c for c in companies_cfg}
+            for k, a in archive["articles"].items():
+                pub = a.get("pubDate_iso", "")
+                if pub < gen_cut and not ec.biz_hint(a.get("title", ""), a.get("description", "")):
+                    continue  # 20일 밖 + 사업 단어 없음 -> 어차피 화면에 안 나옴
+                for l in a.get("links", []):
+                    pk = f"{l['code']}|{k}"
+                    if pk in cache:
+                        continue
+                    inds = "/".join(x for x in ind_by_code.get(l["code"], []) if x and x not in ("미분류", "기타")) or "미상"
+                    todo.append((pub, pk, {"company": display_company_name(l.get("name", "")),
+                                           "aliases": classify_aliases(comp_by_code.get(l["code"]), overrides_cfg.get(l["code"])),
+                                           "industry": inds,
+                                           "title": a.get("title", ""), "summary": a.get("description", ""),
+                                           "date": pub[:10], "stock": bool(a.get("stock"))}))
+            todo.sort(key=lambda x: x[0], reverse=True)  # 최신 기사부터(상한에 걸리면 오래된 것은 다음 날)
+            pairs = [(pk, it) for _, pk, it in todo]
+            batch_size = int(os.environ.get("EVENT_BATCH", "15"))
+            if env_on("EVENT_USE_BATCH"):
+                # Message Batches(반값). 오늘 못 받은 결과는 store/classify_pending.json 에 남겨 다음 실행 때 받음
+                pend_path = os.path.join(STORE_DIR, "classify_pending.json")
+                pending = ns.load_json_file(pend_path, {"batches": []})
+                st = ec.classify_pairs_batched(pairs, anthropic_api_key, cache, pending, model=event_model,
+                                               batch_size=batch_size, max_new=int(os.environ.get("EVENT_MAX", "3000")),
+                                               today=now.strftime("%Y-%m-%d"),
+                                               wait_sec=60 * int(os.environ.get("EVENT_BATCH_WAIT_MIN", "30")))
+                ns.save_json_file(pend_path, pending)
+            else:
+                st = ec.classify_pairs(pairs, anthropic_api_key, cache, model=event_model, batch_size=batch_size,
+                                       max_new=int(os.environ.get("EVENT_MAX", "1500")), today=now.strftime("%Y-%m-%d"))
+            ev_stats.update(st)
+            print(f"사건 분류: 새 쌍 {len(todo)} / 질의 {st['asked']} / 답 {st['answered']} / 실패 {st['failed']}"
+                  f" / 상한 초과 {st['skipped_cap']} / 호출 {st['calls']} / 토큰 입력 {st['input_tokens']} 출력 {st['output_tokens']}")
+        ns.prune_cache(cache, archive)
+
+        by_code = {c.get("code"): c for c in companies_cfg if c.get("code")}
+        view, hidden, vstats = nv.build_view(archive, cache, by_code, now, biz_days=biz_days,
+                                             gen_days=lookback_days, ai_active=classify_on)
+        print(f"화면: 기사 {len(view)} / 회사-기사 사업 {vstats['biz']} 일반 {vstats['gen']} 접기 {vstats['fold']}"
+              f" / 다른 회사로 숨김 {vstats['other']} / 미분류 {vstats['unclassified']}")
+        output["biz_days"] = biz_days
+        output["total_articles"] = len(view)
+        output["articles"] = view
+        output["view_stats"] = vstats
+        output["event_classify"] = ev_stats
+        output["dart"] = dart_stats
+        for h in hidden:
+            uncertain_articles.append(h)
+        ns.save_lines(arch_path, archive)
+        ns.save_lines(cache_path, {"version": 1, "items": cache}, key="items")
+        ns.save_json_file(os.path.join(STORE_DIR, "fetch_state.json"), fetch_state, compact=False)
+        flog.save(os.path.join(STORE_DIR, "filter_log.json"), now.isoformat(),
+                  extra={"paging": page_stats, "match_stats": match_stats, "view_stats": vstats, "event_classify": ev_stats})
+        material = {}
+        for code in by_code:
+            m = nv.summary_material(view, code)
+            if m:
+                material[code] = m
+    else:
+        # 예전 방식: 우선순위 태그 -> 최신순
+        all_articles.sort(key=lambda a: a["pubDate_iso"], reverse=True)
+        all_articles.sort(key=lambda a: (
+            priority_order.index(a["tag_key"]) if a["tag_key"] in priority_order else len(priority_order)
+        ))
+        output["total_articles"] = len(all_articles)
+        output["articles"] = all_articles
+        material = None
+
+    print(f"페이지 넘김: 검색어 {page_stats['queries']} / 네이버 호출 {page_stats['calls']}"
+          f" / 2쪽 이상 {page_stats['multi_page_queries']} / 상한 도달 {len(page_stats['capped_queries'])}")
+    print("제외 사유: " + ", ".join(f"{k} {v}" for k, v in flog.counts.items()))
+
     if match_quality_on:
         uncertain_articles.sort(key=lambda a: a["pubDate_iso"], reverse=True)
         output["uncertain_articles"] = uncertain_articles
@@ -997,14 +1238,19 @@ def main():
         print(f"\n매칭 판정: 채택 {match_stats['ok']} / 보류 {match_stats['uncertain']} / 제외 {match_stats['reject']}"
               f" / 일반명사 모드 {len(match_stats['common_mode'])}곳")
 
+    prev_summaries = None
+    if anthropic_api_key and env_on("SUMMARY_REUSE"):
+        prev_summaries = (ns.load_json_file(os.path.join(DATA_DIR, "news.json"), {}) or {}).get("company_summaries")
     if anthropic_api_key:
         company_summaries = generate_company_summaries(
-            all_articles,
+            output["articles"],
             anthropic_api_key,
             lookback_days=summary_lookback_days,
             max_articles=summary_max_articles,
             request_delay=summary_request_delay,
             industries={c.get("code"): c.get("industry", []) for c in companies_cfg},
+            material=material,
+            prev=prev_summaries,
         )
         output["summary_lookback_days"] = summary_lookback_days
         output["company_summaries"] = company_summaries
@@ -1018,9 +1264,12 @@ def main():
     os.makedirs(DATA_DIR, exist_ok=True)
     out_path = os.path.join(DATA_DIR, "news.json")
     with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(output, f, ensure_ascii=False, indent=2)
+        if store_on:  # 2026-11-24: 90일 사업 사건이 더해져도 파일이 커지지 않게 공백 없이 저장(화면/대시보드는 그대로 읽음)
+            json.dump(output, f, ensure_ascii=False, separators=(",", ":"))
+        else:
+            json.dump(output, f, ensure_ascii=False, indent=2)
 
-    print(f"\n완료: 총 {len(all_articles)}건 -> {out_path}")
+    print(f"\n완료: 총 {output['total_articles']}건 -> {out_path}")
 
 
 if __name__ == "__main__":

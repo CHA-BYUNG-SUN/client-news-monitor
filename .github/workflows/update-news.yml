@@ -36,10 +36,21 @@ jobs:
           NEWS_REQUEST_DELAY: "0.2"
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SUMMARY_LOOKBACK_DAYS: "20"
+          # 2026-11-24 놓친 기사 줄이기 1단계 (문제 시 아래 값을 "off" 로 바꾸면 예전 방식)
+          NEWS_STORE: "on"          # 180일 보관 + 사업 사건 90일 표시 + 사건 분류 (off = 예전 20일 방식 전체)
+          EVENT_CLASSIFY: "on"      # Haiku 사건 분류만 끄기 (off 면 증시어 기사는 예전처럼 제외)
+          NEWS_PAGING: "on"         # 100건 꽉 찬 회사 다음 쪽 받기만 끄기
+          EVENT_USE_BATCH: "on"     # Message Batches(반값). off 면 바로 호출(값 2배)
+          EVENT_MAX: "3000"         # 하루 분류 상한(첫 주 밀린 분량을 나눠 처리)
+          ARCHIVE_DAYS: "180"
+          BIZ_DAYS: "90"
+          NEWS_MAX_PAGES: "10"
+          DART_API_KEY: ${{ secrets.DART_API_KEY }}
+          DART_SOURCE: "on"         # DART 공시를 사업 소식으로 (off 또는 시크릿 없으면 건너뜀)
         run: python scripts/fetch_news.py
 
       - name: 변경사항 커밋 및 푸시
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: 뉴스 데이터 자동 갱신 [skip ci]"
-          file_pattern: "data/news.json"
+          file_pattern: "data/news.json store/*.json"
