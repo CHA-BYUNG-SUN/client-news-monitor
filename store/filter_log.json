@@ -1,742 +1,742 @@
 {
- "generated_at": "2026-11-28T04:04:27.939464+09:00",
+ "generated_at": "2026-11-29T02:39:40.658948+09:00",
  "counts": {
-  "received": 71484,
-  "old": 26233,
-  "no_name": 17522,
-  "list_type": 6850,
-  "ctx": 5023,
-  "ctxwin": 3478,
-  "excl": 579,
-  "mq_reject": 570,
-  "mq_uncertain": 80,
-  "dup": 4436,
-  "stock_signal": 1344,
+  "received": 67052,
+  "old": 26246,
+  "no_name": 14944,
+  "list_type": 6517,
+  "ctx": 4687,
+  "ctxwin": 3156,
+  "excl": 537,
+  "mq_reject": 549,
+  "mq_uncertain": 94,
+  "dup": 3934,
+  "stock_signal": 1241,
   "stock_excluded": 0,
-  "kept": 6713
+  "kept": 6388
  },
  "samples": {
   "no_name": [
    {
-    "code": "926760",
-    "name": "서울엔지니어링",
-    "title": "2.6억 스피커로 듣는 오케스트라 선율…삼성 하만의 JBL ‘에베레스트’...",
-    "description": "삼성전자 자회사 하만은 27일 서울 용산구 이비스 스타일 앰버서더 서울 용산에서 열린 ‘오디오 엑스포... 기술과 엔지니어링 철학을 집약한 제품”이라면서 “단순히 뛰어난 측정 성능을 구현하는 데 그치지...",
-    "link": "https://www.etoday.co.kr/news/view/2654094",
+    "code": "870941",
+    "name": "(주)아람전자",
+    "title": "KT, '산리오캐릭터즈 키즈폰' 판매…아이 안전까지 챙겨",
+    "description": "산리오캐릭터즈 키즈폰은 산리오캐릭터즈 테마를 적용한 삼성전자 '갤럭시 A18 LTE'와 아이의 안전과 안심을... 제품 패키지에 동봉된 밀리의서재 구독권의 QR코드를 통해 응모 가능하며 추첨을 통해 총 50명에게 아람북...",
+    "link": "http://www.newscape.co.kr/news/articleView.html?idxno=126150",
     "pubDate": "2026-11-27",
     "biz_word": false
    },
    {
-    "code": "876418",
-    "name": "(주)동도",
-    "title": "'대리수능' 배현성·차강윤·박윤호, 인생 건 거래…메인 예고편 공개",
-    "description": "강건태의 유일한 단짝 주희동도 두 사람의 거래에 얽힌다. \"건태 없이 나 혼자 가면 퍽이나 받아 주겠다\"라는 말에는 친구를 향한 애정과 서운함이 함께 묻어난다. 두 사람을 바라보는 주희동의 차가운 눈빛은 우정에 균열이...",
-    "link": "https://www.slist.kr/news/articleView.html?idxno=780066",
-    "pubDate": "2026-11-09",
-    "biz_word": true
-   },
-   {
-    "code": "W01R5G",
-    "name": "한화정밀기계(주)_ERP",
-    "title": "코스피, 상승 출발 후 약보합 전환",
-    "description": "의료·정밀기기가 2.21% 하락했으며 전기·가스(-1.73%), 종이·목재(-1.55%), 섬유·의류(-1.36%), 증권(-1.22%), 기계·장비(-1%) 등이 하락했다. 반면 음식료·담배는 1.76% 올랐으며 보험(1.61%), 통신(1.41%), 운송장비...",
-    "link": "https://view.asiae.co.kr/article/2026111609393127528",
-    "pubDate": "2026-11-16",
-    "biz_word": false
-   },
-   {
-    "code": "920754",
-    "name": "고려기전",
-    "title": "발작 제로 가능성 제시 '엑스코프리' 국내 출격",
-    "description": "서대원 교수는 \"뇌전증 치료는 과거 단일약제로 독성 용량까지 증가시켰지만 현재는 약물 작용기전을 고려한 복합요법을 많이 사용한다. 최근 개발약제들을 중심으로 약물상호작용, 동반증세까지 고려한 환자 맞춤형...",
-    "link": "https://www.bosa.co.kr/news/articleView.html?idxno=3017210",
-    "pubDate": "2026-11-24",
-    "biz_word": false
-   },
-   {
-    "code": "877593",
-    "name": "포스텍전자(주)",
-    "title": "서울대, 한·독·스위스 양자물질 국제공동연구센터 개소",
-    "description": "오는 2030년까지 5년간 운영되는 센터에는 서울대와 포스텍, 이화여대, 독일 막스플랑크연구소(MPI)... 스핀트로닉스는 전자의 스핀을 활용해 정보를 저장·처리하는 기술로, 초저전력 메모리와 차세대 반도체...",
-    "link": "https://www.yna.co.kr/view/AKR20261116112100004?input=1195m",
-    "pubDate": "2026-11-16",
-    "biz_word": false
-   },
-   {
-    "code": "924088",
-    "name": "엘지이노텍(주)_ERP",
-    "title": "LG전자, 임원 44명 승진… 로봇·AI 미래사업 방점",
-    "description": "특히 '로봇'과 '데이터센터', 'AIDC 냉각솔루션', '모빌리티', '스마트팩토리' 등 신사업 전문역량 및 기능이 대폭 강화됐다. ◇ 임원 44명 승진… 로봇 핵심인력 5명 발탁 19일 LG전자는 이사회 승인을 거쳐 임원인사 및...",
-    "link": "https://www.sisaweek.com/news/articleView.html?idxno=239075",
-    "pubDate": "2026-11-19",
-    "biz_word": true
-   },
-   {
-    "code": "989876",
-    "name": "한국소니전자(주)_ERP",
-    "title": "[ET단상] 한국 팹리스와 추론용 AI 반도체",
-    "description": "한국 반도체 산업은 메모리 분야에서 세계 정상의 자리를 지켜 왔다. 그러나 반도체 설계 전문 기업인... 디지털 TV가 보급되면서 삼성전자와 LG전자는 일본 소니를 앞질렀고, 아이폰이 스마트폰 시대를 열면서 휴대폰...",
-    "link": "https://www.etnews.com/20261118000045",
+    "code": "W026S5",
+    "name": "(주)나우로보틱스",
+    "title": "[트렌딩 나우] 글로벌 BREV 1위…한국 상위 10개는 글로벌 상위 10개에 없...",
+    "description": "팔라 네트워크(PHA), 라이터(LIT), 파이(PI), 액시스 로보틱스(AXIS), 질리카(ZIL) 순으로 확인됐다. TokenPost AI 유의사항 TokenPost.ai 기반 언어 모델을 사용하여 작성된 기사입니다. 본문의 주요 내용이...",
+    "link": "https://www.tokenpost.kr/news/insights/440308",
     "pubDate": "2026-11-18",
     "biz_word": false
    },
    {
-    "code": "926760",
-    "name": "서울엔지니어링",
-    "title": "삼성물산, 한국형 혁신핵융합로 건설 뛰어든다",
-    "description": "한국핵융합에너지연구원은 25일 서울에서 삼성물산 건설부문과 한국형 혁신핵융합로 설계·건설 및... 지난 6월에 현대엔지니어링이 핵융합로 설계 관련 협약을 체결한 데 이어, 이번에 삼성물산까지 들어오면서 기업들의...",
-    "link": "https://www.mk.co.kr/article/12218182",
-    "pubDate": "2026-11-25",
+    "code": "329446",
+    "name": "한국자동기술산업",
+    "title": "[위클리오늘] 산업일반 소식_현대엘리베이터, SK인텔릭스(11.26)",
+    "description": "자동 주차 시스템의 수평 이송 기술과 승강기의 수직 이동 기술을 결합한 수직 격납형 모델 'H-PORT'를... ▲ 26일 서울 중구 로얄호텔서울에서 열린 '2026 산업 AI 표준화 포럼 총회'에서 류기철 SK인텔릭스 AX...",
+    "link": "http://www.weeklytoday.com/news/articleView.html?idxno=803534",
+    "pubDate": "2026-11-26",
     "biz_word": false
    },
    {
     "code": "878303",
     "name": "월드시스템(주)",
-    "title": "신작 공백 길었던 넥슨…MMORPG·서브컬처 동시 공략",
-    "description": "성장 시스템과 게임 콘텐츠를 선보인다. 웹툰엔터테인먼트가 투자한 알아이홀딩스의 개발 자회사인... 아주르 프로밀리아는 판타지 월드 역할수행게임(RPG)으로 서브컬처 팬덤 공략에 나선다. '벽람향로'를 개발한 중국의...",
-    "link": "https://www.dt.co.kr/article/12097484?ref=naver",
+    "title": "[넥슨 포커스] 넥슨, 신작 2종 같은 날 정식 출시…아주르 프로밀리아·...",
+    "description": "넥슨은 만쥬게임즈가 개발한 판타지 월드 RPG '아주르 프로밀리아'를 PC와 모바일로 국내 출시했고... 장비 중심 성장 시스템 '오버기어드'와 원작의 '갓 핸드'를 활용한 전투, '무기 개조'·'시그니처 장비' 등 장비 성장...",
+    "link": "http://www.thevaluenews.co.kr/news/view.php?idx=203704",
     "pubDate": "2026-11-26",
-    "biz_word": false
-   },
-   {
-    "code": "000PD5",
-    "name": "(주)모아산업",
-    "title": "창녕군, 2027년 예산 8010억원 편성…AI·관광·복지에 역점",
-    "description": "성 군수는 내년도 5대 역점시책으로 △활력 넘치는 산업경제 도시 건설 △통합형 맞춤복지 실현 △유네스코... 군민과 의회, 집행부가 함께 지혜를 모아 창녕의 새로운 미래를 흔들림 없이 만들어 가겠다”고 말했다. 창녕=",
-    "link": "https://www.kukinews.com/article/view/kuk202611270016",
-    "pubDate": "2026-11-27",
-    "biz_word": false
-   },
-   {
-    "code": "873509",
-    "name": "에이피시스템(주)_ERP",
-    "title": "AI 연산 기기 안에서 처리한다…가온칩스·오픈엣지테크놀로지 노려라",
-    "description": "메모리 반도체와 모바일 AP, 시스템 반도체 및 스마트폰 사업을 아우르는 종합 반도체 경쟁력이 온디바이스 AI 시장 확대와 맞물리고 있다. AI 모델 최적화 분야에서는 노타가 두드러진 상승세를 보이고 있다. 노타는 13.57...",
-    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=507413",
-    "pubDate": "2026-11-24",
-    "biz_word": false
-   },
-   {
-    "code": "329446",
-    "name": "한국자동기술산업",
-    "title": "콜마그룹, 국가품질경영대회 8관왕…화장품·건기식 생산 공정 혁신",
-    "description": "국가품질경영대회는 산업통상자원부 국가기술표준원이 주최하고 한국표준협회가 주관하는 행사다. 산업... 한국콜마의 '여시구진' 분임조는 인공지능(AI) 기반 데이터 분석과 자동 검증 시스템을 구축해 생산계획...",
-    "link": "https://www.biotimes.co.kr/news/articleView.html?idxno=36537",
-    "pubDate": "2026-11-27",
-    "biz_word": false
-   },
-   {
-    "code": "872442",
-    "name": "에스엠테크코리아",
-    "title": "반도체 장비부터 산업용 로봇까지…기계주 수주 기대감 확산",
-    "description": "공작기계와 정밀가공 분야에서는 화천기공, 화천기계, 한국정밀기계, 서암기계공업, 신진에스엠, 대성하이텍... 오텍, 부스타, 케이엔솔, 파라텍, 에쎈테크, 한신기계, 하이록코리아, 비엠티 등은 산업시설과 공장...",
-    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=503424",
-    "pubDate": "2026-11-12",
     "biz_word": true
    },
    {
     "code": "989823",
     "name": "미래산업(주)ATE_ERP",
-    "title": "이광재 \"전남광주 통합·반도체 예산 상당 부분 반영\"…막판 협상 주목",
-    "description": "한다\"며 미래 산업과 성장 기반에 대한 재정 투자의 필요성을 강조했다. 통합 지원금 \"상당 부분 지역 유입\" 전남광주 지역 현안도 예결위 심사의 주요 관심사다. 전남광주 행정통합 첫해 지원금 5조원과 서남권 반도체...",
-    "link": "https://www.jnilbo.com/news/articleView.html?idxno=90000086570",
-    "pubDate": "2026-11-25",
-    "biz_word": false
-   },
-   {
-    "code": "W02DSN",
-    "name": "(주)온-ERP",
-    "title": "(주)패스스포츠, LI-NING 국내 총판사 (주)이음플레이와 MOU 체결... 유소...",
-    "description": "(주)패스스포츠와 (주)이음플레이가 업무 협약을 체결했다. 전국 체대입시 교육센터를 기반으로 유소년 농구 아카데미와 선수 트레이닝, 국내 농구대회 및 스포츠 이벤트 등 영역을 확장하고 있는 (주)패스스포츠는 글로벌...",
-    "link": "https://m.sports.naver.com/general/article/065/0000305266",
+    "title": "SK에코플랜트, '콘테크 미트업 데이' 열어…AI·데이터센터 혁신 가속",
+    "description": "김영식 SK에코플랜트 사장은 \"반도체와 AI 데이터센터 분야를 중심으로 오픈이노베이션을 확대해 미래 성장동력을 확보하고 산업 혁신 생태계 조성에 기여하겠다\"고 밝혔다. 한편 SK에코플랜트는 설계 업무 전반에...",
+    "link": "https://www.financialpost.co.kr/news/articleView.html?idxno=303383",
     "pubDate": "2026-11-26",
     "biz_word": false
-   },
-   {
-    "code": "W059WJ",
-    "name": "(주)스타테크",
-    "title": "[월가 톡톡] \"젠슨 황을 메뉴서 뺄수 없죠\"…美 식당의 복귀인사",
-    "description": "아마존은 스페이스X의 위성인터넷 서비스 '스타링크'와 경쟁할 자체 서비스를 구축하고 있다. 아마존 측은 이번 FCC 승인에 대해서는 논평을 거부했다. 우주 데이터센터를 향한 경쟁에는 다른 빅테크 기업들도 뛰어들고...",
-    "link": "https://news.einfomax.co.kr/news/articleView.html?idxno=4446984",
-    "pubDate": "2026-11-27",
-    "biz_word": false
-   },
-   {
-    "code": "989507",
-    "name": "삼성디스플레이(주)_ERP",
-    "title": "삼성전자서비스, '서비스 기술·안전 경진대회' 열어",
-    "description": "삼성전자서비스가 엔지니어의 전문성 강화와 현장 안전 문화 확산을 위해 '제31회 서비스 기술경진 및... (세탁건조기·로봇청소기·시스템에어컨) ▲에어(에어컨·시스템에어컨) ▲영상디스플레이(VD)&IT(TV·PC) ▲모바일...",
-    "link": "https://view.asiae.co.kr/article/2026112607520096624",
-    "pubDate": "2026-11-26",
-    "biz_word": false
-   },
-   {
-    "code": "874858",
-    "name": "세종산업",
-    "title": "과일산업대전서 제주감귤 매력 뽐낸다",
-    "description": "감귤연합회와 제주농협은 지난 5일 정부세종청사와 15일 제주감귤국제마라톤 행사에 이어 이번 행사를 마련했다. 제주감귤연합회와 제주농협은 이번 과일산업대전에 이어 12월 영등포 감귤데이와 서울 봉은사 홍보행사...",
-    "link": "https://www.jejudomin.co.kr/news/articleView.html?idxno=402770",
-    "pubDate": "2026-11-26",
-    "biz_word": false
-   },
-   {
-    "code": "W089ZM",
-    "name": "바른기술",
-    "title": "예술과 자본, 리더가 한자리에… 코리아씨이오서밋, 'WAAF Seoul 2027' 내년...",
-    "description": "(법)바른 변호사, 하태석 영국왕립건축사 겸 퓨처시티소사이어티 의장 등 다양한 분야의 인사들이... 이어지는 갈라 디너에서는 오명 KCS 명예이사장(전 부총리 겸 과학기술부장관)이 만찬 연설을, 제16대 KAIST...",
-    "link": "https://www.fntoday.co.kr/news/articleView.html?idxno=400413",
-    "pubDate": "2026-11-26",
-    "biz_word": false
-   },
-   {
-    "code": "874858",
-    "name": "세종산업",
-    "title": "도와주진 못할망정...박수현 '행정통합' 거론에 허태정 속앓이",
-    "description": "정부의 균형성장 정책 방향과 충청권의 수도권화 인식, 중앙행정기관의 세종 이전, 대전충남 행정통합 무산... 대전의 과학·AI·국방·바이오 등 지역 산업과 연계한 기관 유치 전략도 제시했다. 그러나 시의 통합 추진...",
-    "link": "https://www.newspim.com/news/view/20261125001286",
-    "pubDate": "2026-11-25",
-    "biz_word": false
-   },
-   {
-    "code": "874611",
-    "name": "(주)우리시스템",
-    "title": "우리은행, 쿠팡이츠와 배달료 보호 협약…가족봉사단은 장관상 수상",
-    "description": "우리은행은 정산 시스템과 금융 인프라를 제공한다. 쿠팡이츠서비스는 현장 의견을 전달하고 서비스 안착을 지원할 예정이다. WOORI가족봉사단, 보건복지부장관상 수상 임직원과 가족으로 구성된 'WOORI가족봉사단'은...",
-    "link": "http://www.dailypop.kr/news/articleView.html?idxno=105074",
-    "pubDate": "2026-11-26",
-    "biz_word": false
-   },
-   {
-    "code": "876571",
-    "name": "삼성기전(주)",
-    "title": "11월 20일 주식시장 주요공시",
-    "description": "22%) 규모 공급계약(DYNAMIXEL-X) 체결(계약기간:2026-11-19~2027-04-18) ▶덕신이피씨, 삼성물산과 114.19억원... (계약기간:2026-11-19~2027-05-18) ▶서전기전, 현대건설과 74.93억원(최근 매출액대비 11.0%) 규모 공급계약...",
-    "link": "https://www.catchnews.kr/news/articleView.html?idxno=130836",
-    "pubDate": "2026-11-23",
-    "biz_word": false
-   },
-   {
-    "code": "877718",
-    "name": "(주)화인",
-    "title": "[위클리오늘] 안성시, 100억 원 수소충전소 유치",
-    "description": "수소충전소 전문기업인 코하이젠㈜이 구축과 운영을 맡고, 부지 소유주인 ㈜동성화인텍이 안성종합버스터미널 내 폐업 주유소 부지를 제공한다. 시는 지난 6월부터 수소충전소 전문기업을 직접 발굴해 사업 참여를...",
-    "link": "http://www.weeklytoday.com/news/articleView.html?idxno=803816",
-    "pubDate": "2026-11-27",
-    "biz_word": false
-   },
-   {
-    "code": "989823",
-    "name": "미래산업(주)ATE_ERP",
-    "title": "동부권 과학고 신설 총력…여수시 유치전 '시동'",
-    "description": "미래 첨단 전략산업인 AI와 반도체 등 신소재와 연계해 권역별로 영재학교와 특화된 과학고 4곳을 추가로 신설하겠다는 겁니다. ◀ SYNC ▶ 김대중 교육감-광주전남교육청- \"전남 광주에 영재학교 3교, 과학고 3개 체계를...",
-    "link": "https://ysmbc.co.kr/NewsArticle/1547777",
-    "pubDate": "2026-11-27",
-    "biz_word": true
    },
    {
     "code": "921649",
     "name": "코리아이플랫폼(주)_ERP",
-    "title": "'나의 유죄인간' 해피엔딩",
-    "description": "분)이 악행의 대가를 치르고 윤이준(임시완 분)과 강재희(설인아 분)가 평화로운 일상을 되찾는 모습이... 닐슨코리아 유료플랫폼 기준이다. 이날 윤미진의 계략에 휘말려 총상을 입은 윤이준은 가까스로 의식을...",
-    "link": "https://www.bntnews.co.kr/article/view/bnt202611250095",
+    "title": "이소영 장관 \"활주로에 방지턱 세우지 말아야\"…비대면진료 규제 조정 ...",
+    "description": "이 장관은 26일 서울 용산구 서울창조경제혁신센터에서 열린 '비대면진료 스타트업 간담회' 모두발언에서... 대한 플랫폼 업계 의견을 청취하기 위해 마련됐다. 간담회에는 비대면 진료 스타트업 4개사와 코리아스타트업대...",
+    "link": "https://view.asiae.co.kr/article/2026112616174430801",
+    "pubDate": "2026-11-26",
+    "biz_word": false
+   },
+   {
+    "code": "989823",
+    "name": "미래산업(주)ATE_ERP",
+    "title": "이재명 대통령, 국정과제 이행 점검 지시…내년 계획은 국민 체감 우선",
+    "description": "이 대통령은 인공지능(AI)과 반도체를 넘어 미래 산업 전반으로 기술 패권 경쟁이 확대되고 있다며 \"오늘의 한 걸음 차이는 훗날 백 걸음, 천 걸음의 격차로 벌어질 수 있다\"고 진단했다. 이에 따라 사업별 맞춤형 추진...",
+    "link": "https://www.kyongbuk.co.kr/news/articleView.html?idxno=4092216",
+    "pubDate": "2026-11-26",
+    "biz_word": false
+   },
+   {
+    "code": "329446",
+    "name": "한국자동기술산업",
+    "title": "AI로 문서 만들고 로봇이 페인트칠… 기업의 기술 활용 '각양각색'",
+    "description": "건설현장 자동화 기술을 선보였다. 삼성SDS는 '제52회 국가품질경영대회'에서 국가품질혁신상 AI 부문 대통령표창을 받았다고 26일 밝혔다. 국가품질경영대회는 산업통상부 국가기술표준원이 주최하고 한국표준협회가...",
+    "link": "https://www.pressman.kr/news/articleView.html?idxno=104679",
+    "pubDate": "2026-11-26",
+    "biz_word": true
+   },
+   {
+    "code": "874611",
+    "name": "(주)우리시스템",
+    "title": "[인터뷰] 박형순 엘피텍 대표, 티칭리스 그리퍼에서 휴머노이드의 손까...",
+    "description": "특정 작업에서는 비전 시스템이 반드시 필요할 수 있다. 다만 물체의 크기를 확인하고 잡는 기본적인 작업을 위해 복잡한 장비를 반드시 추가할 필요는 없다는 것이 우리 기술의 방향이다. Q. 실제 제조 현장에서 작업...",
+    "link": "https://www.nbntv.co.kr/news/articleView.html?idxno=4028104",
+    "pubDate": "2026-11-27",
+    "biz_word": false
+   },
+   {
+    "code": "921649",
+    "name": "코리아이플랫폼(주)_ERP",
+    "title": "티셔츠·에코백으로 변신한 아이스크림 배스킨라빈스",
+    "description": "비알코리아의 아이스크림 브랜드 배스킨라빈스가 국내 진출 40주년을 기념해 대표 패션 플랫폼 무신사와 협업한 '40주년 기념 컬렉션'을 출시한다고 27일 밝혔다. 무신사와의 협업은 배스킨라빈스의 브랜드 정체성을...",
+    "link": "https://www.econovill.com/news/articleView.html?idxno=758714",
+    "pubDate": "2026-11-27",
+    "biz_word": false
+   },
+   {
+    "code": "989823",
+    "name": "미래산업(주)ATE_ERP",
+    "title": "전북도, 중국 경제사절단과 미래성장산업 투자협력 논의",
+    "description": "중국 기업과 투자기관 관계자들이 전북을 방문해 반도체와 인공지능(AI), 모빌리티 등 미래성장산업 분야의 투자 및 산업협력 가능성을 논의했다. 전북특별자치도는 중국 중찬그룹 주양(朱阳) 회장을 비롯한 경제사절단이...",
+    "link": "http://www.newsmaker.or.kr/news/articleView.html?idxno=186440",
+    "pubDate": "2026-11-25",
+    "biz_word": true
+   },
+   {
+    "code": "329446",
+    "name": "한국자동기술산업",
+    "title": "삼성SDS, '2026 대한민국 정부혁신 박람회' 참가…공공 AX 역량 소개",
+    "description": "국무총리실, 법제처 등이 AI 에이전트 플랫폼 '패브릭스(FabriX)'를 도입한 사례와 한국철도공사와 진행한 개념검증(PoC) 사례가 소개됐다. 관람객은 법령·행정규칙 검색과 해석, 민원 처리 자동화, 기상특보 전파...",
+    "link": "https://www.tournews21.com/news/articleView.html?idxno=149266",
     "pubDate": "2026-11-25",
     "biz_word": false
    },
    {
-    "code": "W01EPZ",
-    "name": "네이버랩스(주)",
-    "title": "연말 광고비 집행 늘어날까…제일기획·HS애드 견조한 흐름",
-    "description": "네이버 증권. 광고 테마가 20일 연말 쇼핑·프로모션 성수기와 인공지능(AI) 기반 퍼포먼스 마케팅... FSN과 인크로스, 케어랩스는 매도 우위 속에 하락하고 있다. 지어소프트와 KT나스미디어도 약세를 보이고 있으며, 광고...",
-    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=506225",
-    "pubDate": "2026-11-20",
+    "code": "000DGB",
+    "name": "토트",
+    "title": "엘리멘타, '실버 팰리스' AGF 2026 부스 프로그램 공개…드로잉쇼·성우...",
+    "description": "게임 시연 참가자에게는 캔배지 세트, 아크릴 색지, PVC 토트백을 제공하고, 특별 미션을 완료하면 한정판 포토카드도 받을 수 있다. 럭키 드로우에서는 캐릭터 스탠드와 외식권 등 다양한 경품을 마련했다. 한편 '실버...",
+    "link": "https://www.sportschosun.com/entertainment/2026-11-26/202611260100167010015426",
+    "pubDate": "2026-11-26",
+    "biz_word": true
+   },
+   {
+    "code": "874611",
+    "name": "(주)우리시스템",
+    "title": "SK하이닉스 ADR·마이크론 7% 급등…한미반도체부터 HPSP까지 K반도체 '잭...",
+    "description": "우리기술도 원전 제어계측 시스템 관련 기업으로 분류된다. 다만 SMR은 실제 사업화와 상업 운전까지 상당한 시간이 필요한 분야인 만큼 단기적인 테마성 상승과 실질적인 수주를 구분해야 한다. AI 소프트웨어...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=509173",
+    "pubDate": "2026-11-28",
     "biz_word": false
    },
    {
-    "code": "870104",
-    "name": "(주)에너지테크솔루션",
-    "title": "SK에코플랜트, 콘테크 공모전서 7개 혁신기술 선정 … AI 데이터센터 경...",
-    "description": "2020년 시작된 이후 건설·환경·에너지 분야의 기술 경쟁력 확보를 위한 협력 플랫폼으로 운영되고 있다.... 파워링크는 PSCAD 기반 전력계통 디지털트윈 솔루션을, 삼중테크는 국산 하이브리드 쿨러와 드라이쿨러...",
-    "link": "http://www.worktoday.co.kr/news/articleView.html?idxno=92713",
-    "pubDate": "2026-11-26",
-    "biz_word": false
-   },
-   {
-    "code": "W02DSN",
-    "name": "(주)온-ERP",
-    "title": "[2027수시] 깐깐해진 이번주 논술/면접 유의사항.. 부산대 '네일아트 금...",
-    "description": "응시자 전원에게 일회용 면접 가운을 지급하며, 수험생은 입고 온 옷 위에 가운을 덧입어야 한다. 안경... 면접장 앞에서 대기할 때는 준비해 온 자료도 볼 수 없다. 대기실에서 먹을 수 있는 음식은 초콜릿, 사탕류 같은...",
-    "link": "https://www.veritas-a.com/news/articleView.html?idxno=639589",
-    "pubDate": "2026-11-26",
+    "code": "872604",
+    "name": "(주)풍산시스템",
+    "title": "벡스코, 'DSK 2027' 참가기업 모집 박차…글로벌 바이어 유치 강화",
+    "description": "산업통상부와 국토교통부, 국방부, 우주항공청, 부산시가 주최하고 벡스코와 한국무인기시스템협회가... 이 같은 성장세에 힘입어 내년 행사에는 대한항공과 한국항공우주산업(KAI), 풍산, LIG 디펜스...",
+    "link": "https://news.bbsi.co.kr/news/articleView.html?idxno=4120707",
+    "pubDate": "2026-11-25",
     "biz_word": false
    },
    {
     "code": "874858",
     "name": "세종산업",
-    "title": "세종사이버대 AI응용소프트웨어공학과, 전국 지역모임으로 학생 교류 확...",
-    "description": "세종사이버대 AI응용소프트웨어공학과는 생성형 AI와 AI 에이전트, AI 기반 소프트웨어 개발 등 산업 변화에 대응하는 실무 중심 교육과정을 운영하고 있다. 프로그래밍 기초부터 AI 응용서비스 개발까지 단계적으로...",
-    "link": "https://www.pointdaily.co.kr/news/articleView.html?idxno=327466",
+    "title": "충남혁신도시 지정 6년…도의회, 공공기관 우선 배정 요구",
+    "description": "◇ 충남혁신도시 지정 6년…수도권 이전 공공기관 전무 도의회에 따르면 충남은 세종시 건설 과정에서 약... ◇ 석탄화력발전소 폐지 따른 산업전환 부담 반영 요구 충남은 전국 석탄화력발전소 61기 가운데 29기(47.5%)가...",
+    "link": "https://www.m-i.kr/news/articleView.html?idxno=2023537",
     "pubDate": "2026-11-26",
     "biz_word": false
    },
    {
-    "code": "329446",
-    "name": "한국자동기술산업",
-    "title": "아이씨에이치, '박막 필터' 공정 자체 개발 및 특허 출원",
-    "description": "아이씨에이치 관계자는 “표준연의 원천기술을 실제 양산 가능한 제조 기술로 확장해 특허까지 확보했다는 데 큰 의미가 있다”며 “통신 기기뿐 아니라 전파 간섭을 최소화해야 하는 산업용 로봇, 공장 자동화 설비...",
-    "link": "https://www.edaily.co.kr/News/Read?newsId=03132406645649984&mediaCodeNo=257&utm_source=naver&utm_medium=referral&utm_campaign=news_syndication&utm_content=original_article",
+    "code": "W01W92",
+    "name": "(주)열성",
+    "title": "폭염 속 장대레일 70%…코레일, 살수로 식히고 침목은 더 무겁게 [극한기...",
+    "description": "코레일은 레일온도를 낮추기 위해 자동 살수장치와 차열성 페인트, 통풍형 방음벽을 운영하고 있다. 살수장치는 레일온도가 48℃에 이르면 물을 뿌리기 시작해 45℃로 내려가면 멈춘다. 고속선 289개소, 일반선...",
+    "link": "https://www.redaily.co.kr/news/articleView.html?idxno=18307",
+    "pubDate": "2026-11-26",
+    "biz_word": false
+   },
+   {
+    "code": "982165",
+    "name": "필엔지니어링",
+    "title": "삼성전자 급락에 OLED 밸류체인 '흔들'…신도기연·루멘스바이오스는 상...",
+    "description": "레이저 가공과 정밀 공정 기술을 보유한 필옵틱스와 주성엔지니어링, 비아트론도 하락했다. APS이노베이션과 HB솔루션, 이노테크 역시 매도세를 피하지 못했다. 차세대 디스플레이 생산라인 확대에 따른 수혜 기대가...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=506722",
+    "pubDate": "2026-11-22",
+    "biz_word": false
+   },
+   {
+    "code": "921649",
+    "name": "코리아이플랫폼(주)_ERP",
+    "title": "[잘먹잘살+]배스킨라빈스·오뚜기·교촌치킨·매일유업·하이트진로·CJ...",
+    "description": "비알코리아가 운영하는 배스킨라빈스가 국내 진출 40주년을 기념해 패션 & 뷰티 플랫폼 무신사와 협업한... 올해는 협력사 30개사가 참여해 기증품 4010점을 모았으며, 이 가운데 인기 품목 후라이팬, 코코아 비누 등이...",
+    "link": "https://www.businessplus.kr/news/articleView.html?idxno=120617",
     "pubDate": "2026-11-27",
-    "biz_word": true
-   },
-   {
-    "code": "329446",
-    "name": "한국자동기술산업",
-    "title": "CT·MRI도 AI 패권 경쟁…세계 의료기기 기업 美 시카고 집결",
-    "description": "업무 자동화 등을 다루는 산업계 발표가 이어지는 것도 이러한 시장의 관심을 반영한다. 글로벌 장비 기업들이 AI와 소프트웨어를 결합한 통합 솔루션 경쟁에 나서는 가운데 독자적인 영상분석 기술을 확보한 국내...",
-    "link": "https://www.medipana.com/news/articleView.html?idxno=422601",
-    "pubDate": "2026-11-26",
     "biz_word": false
    },
    {
-    "code": "955943",
-    "name": "세종기술(주)",
-    "title": "계룡건설, 세종 모듈러 주택으로 BIM 대상",
-    "description": "계룡건설 컨소시엄이 시공하는 세종 행정중심복합도시 5-1생활권 L5블록 공동주택이 24일... 활용하는 기술이다. 빌딩스마트협회는 2009년부터 매년 BIM 활용 우수 사례를 선정해 시상하고 있다. 계룡건설은 2024년...",
-    "link": "https://www.koreareport.co.kr/news/articleView.html?idxno=55112",
-    "pubDate": "2026-11-24",
+    "code": "W0634V",
+    "name": "SKON",
+    "title": "삼성·SK·LG, 미래사업에 '올인'...안정기조 속 'AI인재' 전진 배치",
+    "description": "삼성·SK·LG그룹이 올해 정기 임원인사에서 경영 안정을 택하면서도 AI 등 미래사업 분야에서는 변화를 확대했다. 경영의 큰 틀은 흔들지 않되 AI 반도체와 로봇, 데이터센터 등 미래 먹거리 경쟁에서는 한발 앞서...",
+    "link": "https://www.newsway.co.kr/news/view?ud=2026112418233828619",
+    "pubDate": "2026-11-25",
     "biz_word": false
    },
    {
     "code": "000PD5",
     "name": "(주)모아산업",
-    "title": "EY컨설팅, ‘EY 사이버보안 센터’ 출범…사이버보안 역량 결집",
-    "description": "한데 모아 ‘선제적 방어 체계’ 구축 지원에 나섰다. 단순한 해킹 사후 수습을 넘어 자율적으로 판단하는 AI 에이전트와 산업 현장의 로봇·자율주행차까지 아우르는 신기술 보안 시장을 선점하겠다는 전략이다....",
-    "link": "https://www.edaily.co.kr/News/Read?newsId=01899126645649984&mediaCodeNo=257&utm_source=naver&utm_medium=referral&utm_campaign=news_syndication&utm_content=original_article",
-    "pubDate": "2026-11-27",
-    "biz_word": false
-   },
-   {
-    "code": "000CWX",
-    "name": "삼성리서치",
-    "title": "전력기기 빅4, 내년에도 HVDC 변압기 국산화·반도체용 SST 주력",
-    "description": "프레시던스 리서치는 글로벌 데이터센터용 변압기 시장이 2027년 95억8000만달러에 달하고 연평균 7.25... 다만 산업계 일각에서 제기되는 글로벌 빅테크의 AI 설비투자(CAPEX) 속도 조절 여부가 중장기 수주잔고 증가세의...",
-    "link": "https://www.womentimes.co.kr/news/articleView.html?idxno=108166",
-    "pubDate": "2026-11-23",
-    "biz_word": true
-   },
-   {
-    "code": "273771",
-    "name": "(주)대한엔지니어링",
-    "title": "코스피, AI 투자 경계감에 6.16% '급락'…삼성전자·SK하이닉스도 '휘청...",
-    "description": "산업에 대한 투자 경계감이 확산한 영향으로 풀이된다. 미국에서는 젠슨 황 CEO를 대상으로 한 상원의... 주성엔지니어링(-11.42%), 이오테크닉스(-8.89%), 심텍(-6.51%), 리노공업(-5.67%) 등 반도체 소재·부품...",
-    "link": "https://www.youthdaily.co.kr/news/article.html?no=230320",
-    "pubDate": "2026-11-25",
-    "biz_word": true
-   },
-   {
-    "code": "W001WY",
-    "name": "(주)파인솔루션",
-    "title": "엘앤씨바이오, 싱가포르서 리투오 임상 사례 발표…K-ECM 알린다",
-    "description": "학술대회에서는 기존 리투오와 리투오 파인, 신제품 리투오 V 등 피부 ECM 제품뿐 아니라 인체조직이식재 메가덤과 3차원 인공지능(AI) 피부 분석 솔루션 루스킨 X도 소개됐다. 현지 의료진은 제품의 소재적 특성과 임상...",
-    "link": "https://www.news1.kr/bio/pharmaceutical-bio/6368664",
-    "pubDate": "2026-11-27",
-    "biz_word": false
-   },
-   {
-    "code": "876190",
-    "name": "(주)테스",
-    "title": "'개인사정으로 한국 떠나더니' 충격 근황! 현지서 \"영웅\" 칭송...KIA 단기...",
-    "description": "아길라스 시바에냐스 소속 아데를린 로드리게스은 23일(이하 한국시간) 도미니카공화국 산티아고의 에스타디오 시바오에서 열린 2026~2027 도미니카공화국 윈터리그(LIDOM) 히간테스 델 시바오와의 홈경기에 4번 타자...",
-    "link": "https://www.sportalkorea.com/news/articleView.html?idxno=2025052909553724728",
-    "pubDate": "2026-11-24",
-    "biz_word": false
-   },
-   {
-    "code": "955943",
-    "name": "세종기술(주)",
-    "title": "생산 26.8조·수출 17조 달성한 K-바이오…정부 \"상용화 강국 도약 지원...",
-    "description": "아주경제=김성서 기자 biblekim@ajunews.com 정부세종청사 13동 산업통상부. [사진=아주경제DB]. 지난해 국내... 단순 의약품 생산기지를 넘어 혁신기술을 실제 제품과 서비스로 구현하는 산업 생태계를 구축한다는 구상이다....",
-    "link": "https://www.ajunews.com/view/20261127083441369",
-    "pubDate": "2026-11-27",
-    "biz_word": false
-   },
-   {
-    "code": "989751",
-    "name": "엘지전자(주)생산기술원(평택)_ERP",
-    "title": "성장사업엔 인재, 부진사업엔 쇄신…4대 그룹 인사로 본 2027 전략",
-    "description": "LG [사진=뉴스핌DB] ◆ 삼성, 반도체에 힘 싣고 주력사업 권한 위임…미래사업 육성 집중 26일 재계에 따르면 삼성전자 2027년 정기인사는 반도체와 스마트폰 등 기존 주력사업의 경쟁력을 유지하면서 파운드리와 로봇 등...",
-    "link": "https://www.newspim.com/news/view/20261126000877",
+    "title": "경주시의회, 정례회 개회…내년도 본 예산 등 심의",
+    "description": "김 시의원은 \"외동3 일반산업단지 내 시유지 매각 안건 심의와 감사 과정에 절차, 집행부 준비 부족 등을... 사업의 타당성과 우선순위를 꼼꼼히 따져 재정 운용의 효율성을 높이는 데 모든 역량을 모아 달라\"고 당부했다.",
+    "link": "https://www.imaeil.com/page/view/2026112618564815260",
     "pubDate": "2026-11-26",
-    "biz_word": false
-   },
-   {
-    "code": "989876",
-    "name": "한국소니전자(주)_ERP",
-    "title": "[현대차 소식] 아반떼 N TCR 우승·버츄얼컵 결승·디자인 전시까지",
-    "description": "한국 5라운드와 중국 저장 7라운드에서도 우승하며 드라이버 순위 1위를 지켰다. 아즈코나는 종합 점수... 현대차는 LG전자와 소니, 로지텍, 넥스트 레벨 레이싱과 협업한 '현대 N 레이싱 시뮬레이터'를 지난 5월...",
-    "link": "http://www.dailypop.kr/news/articleView.html?idxno=104897",
-    "pubDate": "2026-11-24",
-    "biz_word": false
-   }
-  ],
-  "list_type": [
-   {
-    "code": "876405",
-    "name": "(주)원익아이피에스_ERP(구:테라세미콘)",
-    "title": "코스피 장중 5%대 급락세 지속…삼전·닉스 8%대 하락",
-    "description": "85%), 에코프로(-3.44%)은 장 초반보다는 낙폭이 다소 줄었다. 주성엔지니어링(-9.68%), 원익IPS(-10.2%), 심텍(-5.78%), 리노공업(-5.15%) 등 반도체 소부장(소재·부품·장비) 종목들의 약세는 이어지고 있다.",
-    "link": "https://www.yna.co.kr/view/AKR20261125083800008?input=1195m",
-    "pubDate": "2026-11-25",
-    "biz_word": false
-   },
-   {
-    "code": "982774",
-    "name": "(주)오로스테크놀로지-NW",
-    "title": "[공시] '한진칼우·진양화학·깨끗한나라우' 거래정지 예고, 'CJ ENM·두산...",
-    "description": "◆ 대덕·케이씨·팬스타엔터프라이즈 등 투자주의 지정 소수계좌 거래집중 종목에는 LIG디펜스앤에어로스페이스(079550), 대덕(008060), 신대양제지(016590), 오로스테크놀로지(322310), 케이씨(029460), 케이아이이(009140)...",
-    "link": "https://www.newstnt.com/news/articleView.html?idxno=728213",
-    "pubDate": "2026-11-12",
-    "biz_word": false
-   },
-   {
-    "code": "989815",
-    "name": "현대자동차(주)울산공장",
-    "title": "삼성SDI 손잡은 '아틀라스'…테슬라 옵티머스에 도전장",
-    "description": "전문기기 및 고정형 로봇이 수행하기 어렵던 고난도 조립·물류 공정에 아틀라스가 투입되면, 현대차그룹이 추진해 온 '지능형 스마트 팩토리'의 완성도가 한 차원 더 높아질 전망이다.",
-    "link": "https://www.financialpost.co.kr/news/articleView.html?idxno=285551",
-    "pubDate": "2026-11-09",
-    "biz_word": false
-   },
-   {
-    "code": "876919",
-    "name": "(주)테크윙",
-    "title": "HBM 호황 기대에 소부장도 들썩…원익IPS·한미반도체 상승대열 합류",
-    "description": "와이씨와 엑시콘, 테크윙, 네오셈, 기가비스, 프로텍, 다원넥스뷰, 에이팩트, 유니테스트, 에프에스티 등이 상승했다. AI 반도체의 성능과 수율을 확보하기 위해 검사·계측 및 테스트 공정의 중요성이 커지고 있다는 점이...",
-    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=507670",
-    "pubDate": "2026-11-24",
-    "biz_word": false
-   },
-   {
-    "code": "W01R5G",
-    "name": "한화정밀기계(주)_ERP",
-    "title": "한화M&S, 장애아동 치료 지원 '월간 한모금' 2억5000만원으로 확대",
-    "description": "화이트페이퍼, WHITEPAPER(왼쪽부터) 김현섭 한화비전 경영지원실장, 김성구 한화세미텍 기획실장, 박시영 아워홈 경영지원실장, 유상현 한화M&S HR팀장, 정형석 밀알복지재단 상임대표, 김영록 한화호텔앤드리조트...",
-    "link": "http://www.whitepaper.co.kr/news/articleView.html?idxno=268614",
-    "pubDate": "2026-11-10",
-    "biz_word": false
-   },
-   {
-    "code": "922001",
-    "name": "(주)필옵틱스",
-    "title": "이러다 다 날아간다?... LK삼양·나노팀 29% 폭등에 전자장비와 기기주 ...",
-    "description": "반도체 및 전자부품 제조 장비 분야에서는 와이제이링크와 태성, 하나기술, 디에스케이, 티에스아이, 자비스, 펨트론, 필옵틱스, 엔시스, 한울반도체, 고영 등이 올랐다. 반도체와 이차전지 생산라인의 자동화 및 검사...",
-    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=508575",
-    "pubDate": "2026-11-26",
-    "biz_word": false
-   },
-   {
-    "code": "981262",
-    "name": "㈜레인보우로보틱스",
-    "title": "코스피, 4% 상승...4900선 회복",
-    "description": "반면 개인은 8800억원 순매도했다. 주성엔지니어링(14.36%), 삼천당제약(14.12%), 에코프로(13.91%), 레인보우로보틱스(13.70%), 에코프로비엠(13.44%), 리노공업(12.09%) 등이 급등했다.",
-    "link": "https://www.cstimes.com/news/articleView.html?idxno=729804",
-    "pubDate": "2026-11-27",
-    "biz_word": false
-   },
-   {
-    "code": "876505",
-    "name": "로체시스템즈㈜",
-    "title": "HBM 다음은 첨단 패키징…반도체 소부장으로 매수 '줍줍'",
-    "description": "리노공업, 로체시스템즈, 시지트로닉스, 엘티씨, 한국전자홀딩스, 싸이닉솔루션, 피엠티, 오로스테크놀로지 등도 반도체와 반도체장비 관련주로 거래됐다. 반도체 산업은 AI 데이터센터 투자와 고성능 연산 수요 확대에...",
-    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=505591",
-    "pubDate": "2026-11-18",
-    "biz_word": false
-   },
-   {
-    "code": "871567",
-    "name": "(주)로봇앤드디자인",
-    "title": "'2026년 바이오산업의 날' 개최…유공자 34명에 산업부 장관 표창 수여",
-    "description": "인공지능 기반 신약 개발 기업 '포트래이'는 백신의 품질과 효능·안전성을 체계적으로 검증할 수 있는 기술과 서비스를 상용화한 사례를, 로봇앤드디자인은 세포 분리부터 배양·분석에 이르는 치료제 생산 전 과정을...",
-    "link": "https://www.news1.kr/bio/general/6368130",
-    "pubDate": "2026-11-27",
-    "biz_word": false
-   },
-   {
-    "code": "873946",
-    "name": "(주)탑엔지니어링",
-    "title": "[52주] 최고가 5개, 최저가 86개... 코스피 5100대 반등",
-    "description": "9% 4,300 ★★ 37 탑엔지니어링 2,280 ▼0.9% 2,270 ★★★ 38 우리바이오 3,420 ▼0.9% 3,390 ★ 39 GKL 7,210 ▼0.8% 7,200 ★★★★★ 40 엑셀세라퓨틱스 740 ▼0.8% 728 ★ 41 오공 1,900 ▼0.8% 1,895...",
-    "link": "https://www.itooza.com/common/iview.php?no=2026111809340106632",
-    "pubDate": "2026-11-18",
-    "biz_word": false
-   },
-   {
-    "code": "989868",
-    "name": "(주)에스에프에이(아산사업장)_ERP",
-    "title": "원익IPS까지 매수세 집중…반도체 장비주, 전공정 투자 기대 커졌다",
-    "description": "다만 SFA반도체와 인텍플러스, 티에프이, 자비스, 더코디 등은 약세를 보이며 후공정 관련주 내에서도 종목별... 제이스로보틱스와 탑엔지니어링, SFA도 각각 로봇·자동화와 제조 장비 분야에서 관련 종목군에 포함됐다....",
-    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=507551",
-    "pubDate": "2026-11-24",
-    "biz_word": true
-   },
-   {
-    "code": "870663",
-    "name": "(주)로보티즈",
-    "title": "[정구민의 테크읽기] CES 2027, 피지컬AI와 AI에이전트의 시대가 열린다",
-    "description": "M.AX얼라이언스가 주도하는 우리나라 휴머노이드관에는 로보티즈·로브로스·에이로봇 등 우리나라 주요 로봇과 부품사가 참가할 예정이다. 삼성전자·LG전자·현대차의 관련 전시와 함께 우리나라의 로봇 생태계와...",
-    "link": "https://www.etnews.com/20261126000085",
-    "pubDate": "2026-11-26",
-    "biz_word": false
-   },
-   {
-    "code": "989815",
-    "name": "현대자동차(주)울산공장",
-    "title": "전북특별자치도, 기획예산처에 핵심사업 증액 건의",
-    "description": "이 지사는 특히 피지컬AI 밸리, 로봇 부품 클러스터 임대공장, 현대차 인력양성 직업계고 전환 사업이 현대차그룹의 새만금 투자 효과를 지역에 안착시킬 핵심 기반이라며 적기 반영을 강조했다. 새만금 K-푸드...",
-    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=508563",
-    "pubDate": "2026-11-27",
-    "biz_word": false
-   },
-   {
-    "code": "W06X1P",
-    "name": "LG에너지솔루션",
-    "title": "[애프터마켓 리뷰] '우주 데이터센터' 스페이스X 100만 위성 승인",
-    "description": "SK스퀘어도 2%대 따라 올랐고, 반면 LG에너지솔루션과 삼성바이오로직스는 1.46%, 1.69% 하락 마감했습니다.... 다만 로보티즈를 보시면 아시겠지만, 모든 로봇주가 올랐던 건 아니라는 점 포인트로 짚고 가면 좋겠고요....",
-    "link": "https://biz.sbs.co.kr/article_hub/20000349240?division=NAVER",
-    "pubDate": "2026-11-27",
-    "biz_word": false
-   },
-   {
-    "code": "873805",
-    "name": "에이치아이티(주)",
-    "title": "대구 섬유기업 25곳, 서울서 수주 상담…‘나우 인 대구’ 26일 개막",
-    "description": "이번 행사에는 대영패브릭, 백산자카드, 에이치아이티 등 대구경북섬유산업연합회 산하 대구섬유마케팅센터(DMC) 회원사 25곳이 참가한다. F&F, LF, 삼성물산, 이랜드월드 등 국내 주요 패션기업과 온라인 브랜드...",
-    "link": "https://sports.donga.com/region/article/all/20261125/135087258/1",
-    "pubDate": "2026-11-25",
-    "biz_word": true
-   },
-   {
-    "code": "989508",
-    "name": "삼성에스디아이(주)_ERP",
-    "title": "【데일리 ESG 정책 브리핑】배민·쿠팡 6319억원 과징금·헝가리 배터리...",
-    "description": "삼성SDI·SK온 등 헝가리 진출 배터리기업, ESG 협력 강화…EU 배터리 규제 대응 논의 산업통상부가 헝가리... 박찬암 스틸리언 대표는 AI 공격의 자동화와 속도 증가에 대응하기 위한 자율형 보안 에이전트 도입을...",
-    "link": "https://www.impacton.net/news/articleView.html?idxno=30598",
-    "pubDate": "2026-11-10",
-    "biz_word": false
-   },
-   {
-    "code": "989880",
-    "name": "(주)케이씨텍_ERP",
-    "title": "HBM 다음은 첨단 패키징…반도체 소부장으로 매수 '줍줍'",
-    "description": "이 밖에 원익홀딩스, 코세스, 라온로보틱스, 뉴파워프라즈마, 아진엑스텍, 라온텍, 브이엠, APS, 저스템, KEC, 한양디지텍, 샘씨엔에스, 덕산하이메탈, 메카로, 미래반도체, 이엘씨, 해치텍, 케이씨텍, 성우테크론, 기가비스...",
-    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=505591",
-    "pubDate": "2026-11-18",
-    "biz_word": false
-   },
-   {
-    "code": "989502",
-    "name": "삼성전기(주)_ERP",
-    "title": "[글로벌AI투매충격] 코스피 '5천피' 붕괴 이어 필라델피아 반도체 10.7% ...",
-    "description": "삼성전기, 삼성전자우, 삼성SDI 등이 올랐다. 대신증권의 경제분석 AI 모델 '재미니'(JAEMINI)는 AI 수요보다 AI 투자가 내년 이후에도 지속될 수 있을지에 대한 의구심이 커지고 있다고 분석했다. 앞으로 AI 투자의...",
-    "link": "https://www.cbci.co.kr/news/articleView.html?idxno=629551",
-    "pubDate": "2026-11-23",
-    "biz_word": false
-   },
-   {
-    "code": "871712",
-    "name": "현대자동차(주)울산공장",
-    "title": "[초점] 대기업 상생협력, 돈 풀기 넘어 기술·양산 문턱 낮춘다",
-    "description": "양산라인 평가를 지원하며, LG디스플레이와 현대차·기아는 공동 연구개발과 로봇 플랫폼을 중심으로 협력... 300㎜ 웨이퍼를 사용하는 실제 생산라인과 유사한 환경을 갖추고, 2027년 4분기부터 본격적인 실증 서비스를...",
-    "link": "https://www.newsian.co.kr/news/articleView.html?idxno=101755",
-    "pubDate": "2026-11-23",
-    "biz_word": true
-   },
-   {
-    "code": "879138",
-    "name": "(주)엔시스",
-    "title": "[52주] 최저가 95개, 최고가 3개... 코스피 4700대로",
-    "description": "9% 1,398 ★★ 52 엔시스 3,210 ▼2.9% 3,210 ★ 53 동국S&C 1,160 ▼2.9% 1,143 ★ 54 티사이언티픽 1,181 ▼2.8% 1,151 ★★★ 55 휴스틸 2,330 ▼2.7% 2,200 ★★ 56 SK아이이테크놀로지 10,450 ▼2.5% 10...",
-    "link": "https://www.itooza.com/common/iview.php?no=2026112509340105138",
-    "pubDate": "2026-11-25",
-    "biz_word": false
-   },
-   {
-    "code": "989751",
-    "name": "엘지전자(주)생산기술원(평택)_ERP",
-    "title": "기계·로봇산업 발전유공 포상…제일산기·케디엠 은탑산업훈장",
-    "description": "정 전무는 친환경·고성능 디젤엔진과 발전용 가스엔진 개발, 박 자문위원은 차량용 전동시트 스위치 국산화와 생산공정 자동화 등의 성과를 인정받았다. 대통령표창은 임채웅 에쓰엔 대표, 권민호 LG전자 상무, 고영일...",
-    "link": "http://www.ferrotimes.com/news/articleView.html?idxno=51688",
-    "pubDate": "2026-11-26",
-    "biz_word": true
-   },
-   {
-    "code": "989856",
-    "name": "(주)원익아이피에스-진위FPD내자_ERP",
-    "title": "개인·외인 '수급 공방'⋯코스피 '4710선' 약보합 등락",
-    "description": "심텍(4.48%), 이오테크닉스(3.50%), 원익IPS(0.16%), 피에스케이홀딩스(1.45%) 등 종목은 내리고 있다. 외국인이 505억원을 사들이고 있다. 기관도 637억원 매수 우위다. 개인 홀로 1117억원을 팔아치우며 차익을 실현하고...",
-    "link": "http://www.inews24.com/view/2031108",
-    "pubDate": "2026-11-27",
-    "biz_word": false
-   },
-   {
-    "code": "989857",
-    "name": "(주)원익아이피에스SMC내자_ERP",
-    "title": "바이오헬스 수출 125% 급증…삼성바이오로직스·셀트리온 성장 탄력받나",
-    "description": "반도체 분야에서는 한미반도체, 하나마이크론, ISC, 원익IPS, 동진쎄미켐 등이 관련 기업으로 꼽힌다. 한미반도체는 HBM 제조용 TC본더 등 첨단 패키징 장비를 공급하고, 하나마이크론과 ISC는 반도체 후공정 및 테스트...",
-    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=507940",
-    "pubDate": "2026-11-25",
-    "biz_word": false
-   },
-   {
-    "code": "878742",
-    "name": "(주)아바코",
-    "title": "[이넷뉴스 브랜드평판] 한전, 태양광에너지 상장기업 11월 1위···한화...",
-    "description": "다스코, 아바코, SK디앤디, 파루, 에스와이, 디에스엠, SDN, 이건홀딩스, 에스폴리텍 이다. 한편, 이넷뉴스 에너지 톱 브랜드위원회와 한국기업평판연구소는 매달 국내 에너지 기업 및 브랜드 평판지수를...",
-    "link": "https://www.enetnews.co.kr/news/articleView.html?idxno=56477",
-    "pubDate": "2026-11-18",
-    "biz_word": false
-   },
-   {
-    "code": "922001",
-    "name": "(주)필옵틱스",
-    "title": "한국거래소, 코스피200 등 3대 지수 종목 교체...정기변경 12월 적용",
-    "description": "KRX 300 편출 종목은 덕산네오룩스, SK케미칼, HS효성첨단소재, 롯데지주, 대한조선, CJ대한통운, 유일로보틱스, 피엔티, 클로봇, 세진중공업, 한화머시너리앤서비스홀딩스, 엔켐, 필옵틱스, 영풍, 신영증권, 동원산업...",
-    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=505579",
-    "pubDate": "2026-11-18",
-    "biz_word": false
-   },
-   {
-    "code": "873160",
-    "name": "(주)케이엔에스",
-    "title": "전기차 캐즘에 2차전지주 약세…이수스페셜티케미컬 상승랠리 '눈에 띄...",
-    "description": "유진테크놀로지와 메가터치, 자비스, 케이엔에스, HB테크놀러지, 원익피앤이, 코세스, 이노메트리, 나인테크, 한빛레이저, 피엔티, 필에너지, 엠오티, 브이원텍, 톱텍, 한울반도체, 하나기술, 디아이티, 엠플러스, 쎄크...",
-    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=507069",
-    "pubDate": "2026-11-23",
-    "biz_word": false
-   },
-   {
-    "code": "989874",
-    "name": "(주)이오테크닉스_ERP",
-    "title": "코스피, 1% 안팎 상승세…한은 기준금리 인상 속 탄력 둔화",
-    "description": "주성엔지니어링(5.8%), 심텍(1.77%), 리노공업(3.39%), 이오테크닉스(1.95%) 등 전날 급락했던 반도체 소부장(소재·부품·장비) 종목은 반등하고 있으나, 장 초반보다는 상승세가 약합니다. 이외 시총 상위 종목 중...",
-    "link": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008864700&plink=ORI&cooper=NAVER",
-    "pubDate": "2026-11-26",
-    "biz_word": false
-   },
-   {
-    "code": "870663",
-    "name": "(주)로보티즈",
-    "title": "\"반등할 줄 알았는데\"…삼전닉스 동반 폭락에 개미들 '한숨'",
-    "description": "주성엔지니어링(-11.42%), 심텍(-6.51%), 리노공업(-5.67%), 에코프로(-5.01%), 에코프로비엠(-4.64%), 로보티즈(-1.87%), 레인보우로보틱스(-1.80%) 등 시가총액 상위 종목 대부분이 하락했다. 알테오젠(6.20...",
-    "link": "https://www.hankyung.com/article/2026112597396",
-    "pubDate": "2026-11-25",
     "biz_word": false
    },
    {
     "code": "876179",
     "name": "(주)하나기술",
-    "title": "[특징주] 덕산테코피아, 공주 GMP 공장 완공·반도체 소재 테마 강세에 ...",
-    "description": "같은 시각 기준 2차전지(전고체) 테마는 전체 265개 테마 중 등락률 18위(평균 +6.94%)에 올라 레이크머티리얼즈(+18.41%), SFA넥셀(+12.54%), 하나기술(+11.73%), 아이엘(+10.34%), 한농화성(+9.80%), 천보(+9.51%) 등이 오름세를...",
-    "link": "https://www.widedaily.com/news/articleView.html?idxno=305014",
-    "pubDate": "2026-11-27",
-    "biz_word": true
-   },
-   {
-    "code": "989640",
-    "name": "삼성전자㈜-생산기술연구소_ERP",
-    "title": "‘6G 비전 페스트 2026’ 12월 송도서 열린다…국내외 45개 기업 참가",
-    "description": "K-Telco & Enterprise Zone에는 삼성전자, LG, SK텔레콤, KT, ETRI 등이 참여한다. 삼성전자는 AI 스마트 글래스... 인천광역시는 AI 커넥티드 모빌리티 정책을 비롯해 커넥티드카와 로봇 기술을 소개하며 인천의 관련...",
-    "link": "https://www.donga.com/news/It/article/all/20261126/135096147/1",
-    "pubDate": "2026-11-26",
-    "biz_word": false
-   },
-   {
-    "code": "953471",
-    "name": "(주)티에스이",
-    "title": "코스피, 반도체·증권주 강세에 4900선 탈환...코스닥 8%대 폭등",
-    "description": "LED장비 관련주에서는 티씨케이(12.03%), 기가레인(10.78%), 레이저쎌(8.93%), 예스티(8.79%), 티에스이(8.01%) 등이 강세를 기록했다. 고체산화물 연료전지(SOFC) 관련주에서는 서진시스템이 21.08% 급등한 가운데 엘티씨...",
-    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=508937",
-    "pubDate": "2026-11-27",
-    "biz_word": false
-   },
-   {
-    "code": "989898",
-    "name": "삼성중공업(주)거제조선소_ERP",
-    "title": "코스피 5090선 반등…삼성전자·SK하이닉스 급등",
-    "description": "00%), 삼성중공업(-1.69%), 한국전력(-1.39%), 삼성E&A(-3.98%), 기아(-1.09%), 한화에어로스페이스(-0.80... 반면 에이엘로봇(-10.68%), 옵토닉스(-2.75%), HLB(-0.71%), 네이처셀(-0.69%), 에코프로비엠(-0.59%)은 약세를...",
-    "link": "http://www.newskr.kr/news/articleView.html?idxno=108093",
+    "title": "디즈니+, 12월부터 훌루와 전면 통합",
+    "description": "디즈니는 두 서비스를 하나의 기술 플랫폼으로 통합해 운영 비용을 절감하고 광고 사업 기회를 확대한다는 전략이다. 밥 아이거는 앞서 통합 앱을 통해 광고 상품을 함께 판매할 기회가 늘어날 것으로 전망한 바 있다....",
+    "link": "https://www.digitaltoday.co.kr/news/articleView.html?idxno=716231",
     "pubDate": "2026-11-18",
     "biz_word": false
    },
    {
-    "code": "924088",
-    "name": "엘지이노텍(주)_ERP",
-    "title": "삼성·현대차그룹, 로봇·자율주행 등 협력 강화...'미래 모빌리티 동맹...",
-    "description": "청라지구를 중심으로 구축하는 인천광역시 사이언스파크 사업에 현대모비스, LG이노텍, HL클레무브... (정비 자동화 AI 로봇) 등이 연합하고 있다. 이들 기업은 AI 융합 모빌리티 애프터마켓 통합 플랫폼을 구축하고...",
-    "link": "https://www.womentimes.co.kr/news/articleView.html?idxno=107734",
-    "pubDate": "2026-11-09",
-    "biz_word": true
+    "code": "879419",
+    "name": "(주)그린광학_TA",
+    "title": "화성시, 송산그린시티 국가산업단지 산업시설용지 우선 분양 추천 공모",
+    "description": "매일일보 = 한철희 기자 | 화성특례시는 송산면 일원에 조성되는 송산그린시티 국가산업단지의... (C21) △의료·정밀·광학기기 및 시계 제조업(C27)이 입주할 수 있다. 신청은 산업단지 입주자격을 갖춘 국내 법인...",
+    "link": "https://www.m-i.kr/news/articleView.html?idxno=2022574",
+    "pubDate": "2026-11-24",
+    "biz_word": false
    },
    {
-    "code": "989874",
-    "name": "(주)이오테크닉스_ERP",
-    "title": "코스피, 장중 상승세 지속…외인·기관 '쌍끌이 매수'",
-    "description": "시총 상위 종목 중 알테오젠, 레인보우로보틱스, 주성엔지니어링, 심텍, HLB, 삼천당제약, 리노공업, 이오테크닉스 등이 오르고 있고 에코프로비엠, 에코프로, 로보티즈 등이 내리고 있다.",
-    "link": "https://www.hankyung.com/article/2026112618086",
+    "code": "924803",
+    "name": "삼성기전(주)",
+    "title": "\"발작 감소 넘어 '발작 제로' 일상으로\"… '엑스코프리' 임상적 가치 조...",
+    "description": "전압개폐성 나트륨 전류 억제와 GABA-A 수용체 기능 강화라는 이중 기전으로 신경세포의 과도한 흥분을... 이어 연자로 나선 서대원 삼성서울병원 신경과 교수(대한신경과학회 이사장)는 \"국내 뇌전증 환자 36만 명 중 약...",
+    "link": "http://www.bokuennews.com/news/article.html?no=287659",
+    "pubDate": "2026-11-24",
+    "biz_word": false
+   },
+   {
+    "code": "874611",
+    "name": "(주)우리시스템",
+    "title": "쿠팡이츠서비스, 우리은행과 손잡고 라이더 정산 피해 막는다",
+    "description": "이번 협약을 통해 양사는 배달앱과 배달협력사 간 정산 과정의 안정성과 투명성을 높일 수 있도록 우리은행의 대금예치 기반 시스템을 연계하는 방안을 논의해 나가기로 했다. 이를 통해 정산 과정의 투명성을 높이고...",
+    "link": "http://www.nongaek.com/news/articleView.html?idxno=97639",
     "pubDate": "2026-11-26",
     "biz_word": false
    },
    {
-    "code": "876919",
-    "name": "(주)테크윙",
-    "title": "코스피 5350선 돌파…SK하이닉스 5%·코스닥 5% 급등",
-    "description": "한미반도체가 5.88%, 이수페타시스가 17.03%, 대덕전자가 12.38%, 원익IPS가 14.47%, 테크윙이 20.25%, DB하이텍이 11.63%, 제주반도체가 8.77% 오르는 등 반도체 장비·부품주까지 매수세가 확산됐다. 전날 미국 반도체 지수가 6...",
-    "link": "https://www.topstarnews.net/news/articleView.html?idxno=16273782",
-    "pubDate": "2026-11-11",
-    "biz_word": false
-   },
-   {
-    "code": "984233",
-    "name": "신흥에스이씨(주)",
-    "title": "전기차주 차익실현에 무더기 하락…솔루스첨단소재는 폭등랠리",
-    "description": "LG에너지솔루션, LG화학, SK이노베이션, 삼성SDI를 비롯해 양극재 업체인 엘앤에프, 코스모신소재, 배터리 소재 기업 SKC, 엔켐, 신흥에스이씨, 이닉스, 신성에스티, 삼기에너지솔루션즈, 상신이디피, 엠플러스, 강원에너지...",
-    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=504665",
-    "pubDate": "2026-11-16",
-    "biz_word": false
-   },
-   {
-    "code": "989815",
-    "name": "현대자동차(주)울산공장",
-    "title": "코스피, 반도체주 약세에 보합권 등락…코스닥은 3%대 급등",
-    "description": "시가총액 상위 종목 중 LG에너지솔루션[373220](1.82%), 현대차[005380](0.77%), 셀트리온[068270](2.78%), 기아... 로봇·바이오·이차전지주 강세…코스닥 상승폭 확대 같은 시각 코스닥 지수는 전장보다 20....",
-    "link": "https://www.jnilbo.com/news/articleView.html?idxno=90000087165",
+    "code": "329446",
+    "name": "한국자동기술산업",
+    "title": "토큰화로 금융시장 경쟁구도 재편···국내 증권사에 '기회이자 위기'",
+    "description": "AI 기술을 통한 생산성 향상이 한국 경제의 잠재성장률과 국내 증시의 장기투자 여건을 개선할 수 있다고 전망했다. 장기투자 대상으로는 AI 산업과 관련성이 높고 지속적인 이익 창출과 적극적인 주주환원이 가능한 기업에...",
+    "link": "https://www.seoulfn.com/news/articleView.html?idxno=644222",
     "pubDate": "2026-11-27",
     "biz_word": false
    },
    {
-    "code": "989815",
-    "name": "현대자동차(주)울산공장",
-    "title": "외국인 매수에 증시 '반등'…코스피 4.34%·코스닥 8.13% '급등'",
-    "description": "이밖에 SK스퀘어(5.37%), LG에너지솔루션(4.80%), 삼성바이오로직스(1.05%), 삼성전기(4.72%), 현대차(3.86%) 등도... 시가총액 상위 종목 가운데 제약·바이오와 반도체 소재·부품·장비, 로봇 관련주가 일제히 상승했다....",
-    "link": "https://www.youthdaily.co.kr/news/article.html?no=230464",
+    "code": "980697",
+    "name": "창성",
+    "title": "[포토뉴스] 대덕대, 'DDU 생금 한국어 말하기 대회' 성료",
+    "description": "대덕대학교(총장 김대성)는 지난 4일 창성체육관에서 국제협력단이 주최하고 앵커사업단이 주관한 '2026학년도 제1회 유성살이 외국인도 함께하는 DDU 생금 한국어 말하기 대회'를 성황리에 마쳤다. 이번 대회는 대덕대...",
+    "link": "https://daily.hankooki.com/news/articleView.html?idxno=1423279",
+    "pubDate": "2026-11-09",
+    "biz_word": false
+   },
+   {
+    "code": "876239",
+    "name": "양전자시스템(주)",
+    "title": "[의료기기업계 소식] 11월 27일",
+    "description": "FDA는 인체조직 원료 관리부터 가공·보관·분배 절차, 품질관리시스템 운영 전반을 점검했다.... 기존 양전자단층촬영(PET)이나 뇌척수액(CSF) 검사 대비 비용과 검사 부담을 낮춰 조기 선별검사와 정기적인 뇌 건강...",
+    "link": "http://www.doctorstimes.com/news/articleView.html?idxno=241317",
+    "pubDate": "2026-11-27",
+    "biz_word": false
+   },
+   {
+    "code": "W02DSN",
+    "name": "(주)온-ERP",
+    "title": "지씨셀, 이뮨셀엘씨주 누적 판매 10만 팩…국내 세포치료제 최다",
+    "description": "간세포암 환자를 대상으로 꾸준히 임상연구를 진행해 온 세브란스병원 이혜원 교수와 면역세포치료... 지씨셀은 측은 개별 생산에 필요한 기술을 확보하고 안정적인 공급망을 유지해 온 점을 국내 세포치료제 최다 판매...",
+    "link": "https://www.seoultimes.news/news/article.html?no=2000102771",
+    "pubDate": "2026-11-27",
+    "biz_word": false
+   },
+   {
+    "code": "876239",
+    "name": "양전자시스템(주)",
+    "title": "뉴로핏, 美 서틀메디컬과 플랫폼 연동 및 공급 계약 체결…북미 공급망...",
+    "description": "AI 기술을 활용해 자기공명영상(MRI), 양전자 방출 단층 촬영(PET) 등 영상 품질을 개선하고 촬영 효율성을... 장비·의료영상저장전송시스템(PACS) 환경 및 외부 파트너 솔루션과의 원활한 연동을 지원하고 있다. 특히...",
+    "link": "http://www.newsprime.co.kr/news/article.html?no=756373",
+    "pubDate": "2026-11-25",
+    "biz_word": true
+   },
+   {
+    "code": "921649",
+    "name": "코리아이플랫폼(주)_ERP",
+    "title": "[유통갤러리] 귀뚜라미그룹, 품질 경쟁력 우수기업 3개 계열사 동반 선...",
+    "description": "센텍코리아와 함께 시작한 숙취운전 예방 캠페인이다. 캠페인을 위해 특별히 고안된 ‘약속함’은 음주 후... 이번 수상은 식품의약품안전처의 식품영양성분 데이터베이스(DB) 플랫폼 K-FIND를 활용한 영양정보 서비스...",
+    "link": "https://theviewers.co.kr/View.aspx?No=4330461",
+    "pubDate": "2026-11-26",
+    "biz_word": false
+   },
+   {
+    "code": "000PD5",
+    "name": "(주)모아산업",
+    "title": "서경화 플라잉건축사사무소 대표 | 매주 반가운 친구처럼 우편함에서 나...",
+    "description": "새로운 콘텐츠를 기획하고 원고를 모아 편집과 인쇄, 배송에 이르기까지. 이 모든 과정을 20년 동안 한결같이... 어려움과 변화 속에서도 목재산업과 목재문화를 향한 진심으로 오늘을 만들어 오신 모든 분께 감사의...",
+    "link": "https://www.imwood.co.kr/news/articleView.html?idxno=42399",
+    "pubDate": "2026-11-26",
+    "biz_word": false
+   },
+   {
+    "code": "874611",
+    "name": "(주)우리시스템",
+    "title": "박우찬 컴퓨터 공학과 교수...\"한국의 젠슨 황을 보는 듯합니다!\"",
+    "description": "특히 올해는 AI의 원년이라고 해도 과언이 아닌만큼 무쌍한 변화가 우리들... 이에 대해 그는 \"최근에 개발하고 있는 실시간 sound-tracing 및 AI 시스템 반도체 역시 GPU...",
+    "link": "http://www.breaknews.com/1254625",
     "pubDate": "2026-11-27",
     "biz_word": false
    },
    {
     "code": "873937",
     "name": "(주)기아자동차화성공장",
-    "title": "미래 모빌리티 산업 함께 준비",
-    "description": "현대차·기아가 전기차, SDV(소프트웨어 중심 자동차), AI(인공지능) 등 미래 모빌리티 산업의 급격한... 주요 교육과정은 작업 표준서 및 품질 관련 문서 생성을 자동화하는 '생성형 AI 업무', 제조 현장의 품질 검사...",
-    "link": "https://monthly.chosun.com/news/articleView.html?idxno=72138",
+    "title": "LG유플러스, 현대차그룹 로보틱스랩과 배송로봇 5G SA 통신 실증",
+    "description": "현대차기아 로보틱스랩은 배송로봇에 먼저 적용한 5G 통신보드를 다른 로봇에도 적용할 수 있는지 계속 검토한다. 양사는 로봇이 5G망에 상시 연결되는 환경에 대비해 디도스(DDoS) 등 외부 공격에 대응하는 네트워크...",
+    "link": "https://www.koreareport.co.kr/news/articleView.html?idxno=55272",
+    "pubDate": "2026-11-27",
+    "biz_word": true
+   },
+   {
+    "code": "W025E6",
+    "name": "(주)마이크로비전",
+    "title": "李대통령 \"강릉 천연물 혁신센터, 예산 반영해 신속 추진\"",
+    "description": "오상록 KIST 원장은 이날 지난 20여년 간 연구소가 지역과 함께 이뤄낸 천연물 신약 개발, 기업 지원 및 인재 양성 성과, 강원의 글로벌 천연물 바이오산업 비전을 제시했다. 판철호 마이크로알지에스크어스 대표이사는...",
+    "link": "https://www.mt.co.kr/politics/2026/11/28/2026112817195258829",
+    "pubDate": "2026-11-28",
+    "biz_word": false
+   },
+   {
+    "code": "873794",
+    "name": "서울테크",
+    "title": "쿠팡 임직원, 연말 맞아 헌혈 봉사활동…헌혈증 기부 추진",
+    "description": "쿠팡은 대한산업보건협회 한마음혈액원과 함께 지난 26일 서울 광진구 구의 오피스 인근 나루공원에서... 한편, AI 데이터 테크 기업 아이지에이웍스의 모바일인덱스에 따르면 쿠팡의 지난 7월 신용·체크카드 추정...",
+    "link": "https://www.megaeconomy.co.kr/news/newsview.php?ncode=1065592401524033",
+    "pubDate": "2026-11-27",
+    "biz_word": false
+   },
+   {
+    "code": "878303",
+    "name": "월드시스템(주)",
+    "title": "롯데칠성음료·오비맥주, 식품 안전·음주운전 예방 활동 전개",
+    "description": "롯데월드타워에서 열린 한국식품안전관리인증원의 스마트 해썹 선도모델 성과보고회에서 안성공장 운영... 롯데칠성음료는 올해 안성공장 어셉틱(무균충전) 생산라인에 해당 시스템을 도입했다. 제조용수의 수질을...",
+    "link": "https://www.lcnews.co.kr/news/articleView.html?idxno=212035",
+    "pubDate": "2026-11-26",
+    "biz_word": false
+   },
+   {
+    "code": "872442",
+    "name": "에스엠테크코리아",
+    "title": "현대건설, 진해신항 서컨 2단계 항만 배후 조성공사 수주 유력",
+    "description": "현대건설은 55%의 지분을 갖고 국기건설, 정우개발, 지에이이앤씨, 명현건설, 영동건설, 덴버코리아이엔씨, 네오테크이앤씨, 씨티이앤씨, 에스엠건설(각 5%)과 컨소시엄을 꾸려 이 공사 입찰에 참여했다. 설계는...",
+    "link": "https://www.dnews.co.kr/uhtml/view.jsp?idxno=202611251036566090517",
+    "pubDate": "2026-11-25",
+    "biz_word": true
+   },
+   {
+    "code": "000CWX",
+    "name": "삼성리서치",
+    "title": "[99.9MHz]이상일 용인시장, ˝반도체 초격차·광역철도 사수로 '용인 르...",
+    "description": "(위탁생산) 라인 확장이 한창이다. 처인구 이동·남사읍 일대 235만 평 부지에 조성되는 삼성전자 국가산단은... 현재 글로벌 반도체 장비 4대 거두(ASML, 어플라이드 머티리얼즈, 램 리서치, 도쿄일렉트론)가 모두 용인에...",
+    "link": "https://www.obsnews.co.kr/news/articleView.html?idxno=1543117",
+    "pubDate": "2026-11-09",
+    "biz_word": false
+   },
+   {
+    "code": "874611",
+    "name": "(주)우리시스템",
+    "title": "달 기지 시대, 주파수 확보전…韓도 10개 신청국에 포함",
+    "description": "향후 수십년간 수백건의 달 탐사 임무가 계획돼 있는 만큼 ITU는 신규 주파수 소요량은 물론 각국의 통신시스템 간 전파 간섭을 방지하기 위한 이용 조건도 검토 중이다. 우리 정부도 국내 달 탐사 계획에 맞춰 이번...",
+    "link": "https://www.ddaily.co.kr/page/view/2026112722345224301",
+    "pubDate": "2026-11-28",
+    "biz_word": false
+   }
+  ],
+  "list_type": [
+   {
+    "code": "W02DSN",
+    "name": "(주)온-ERP",
+    "title": "PAKISTAN MAKKAH PACT",
+    "description": "Pakistan, Saudi Arabia and Turkiye reaffirmed their commitment to collective defence under the Makkah Joint Defence Agreement, signed on 07 August 2026, which stipulates that an attack against...",
+    "link": "https://n.news.naver.com/mnews/article/091/0010380761?sid=104",
+    "pubDate": "2026-11-28",
+    "biz_word": false
+   },
+   {
+    "code": "989815",
+    "name": "현대자동차(주)울산공장",
+    "title": "브릴스, 디와이에이에 로봇 솔루션 공급…누적 47억원",
+    "description": "브릴스가 디와이에이 인주공장에 구축한 자동차 시트 조립·검사·물류 자동화 공정 로봇 모듈화 플랫폼 솔루션 (사진=브릴스) 디와이에이는 현대차·기아와 광주글로벌모터스, KG모빌리티에 완성형 자동차 시트를...",
+    "link": "https://www.edaily.co.kr/News/Read?newsId=02761766645649328&mediaCodeNo=257&utm_source=naver&utm_medium=referral&utm_campaign=news_syndication&utm_content=original_article",
+    "pubDate": "2026-11-25",
+    "biz_word": true
+   },
+   {
+    "code": "W07G4N",
+    "name": "제이피아이헬스케어(주)",
+    "title": "반세기 기술력으로 100년 기업 도약…명문장수기업 12곳 선정",
+    "description": "중소기업 중에서는 대진코스탈, 동방전기공업, 명진TSR, 이노블록, 제이피아이헬스케어, 한국OSG, 합동물류가 신규 선정됐다. 광신기계공업, 매일식품, 삼우금속공업은 자격 연장 심사를 통과했다. 중견기업 중에서는...",
+    "link": "https://www.nocutnews.co.kr/news/6612191?utm_source=naver&utm_medium=article&utm_campaign=20261125103012",
+    "pubDate": "2026-11-25",
+    "biz_word": false
+   },
+   {
+    "code": "955240",
+    "name": "제닉스(주)",
+    "title": "[오전시황] 코스닥 6%대 급등, 상한가 9개 종목...매수사이드카 발동",
+    "description": "코스모로보틱스(5720원), 제닉스로보틱스(8020원), 에스피시스템스(4580원)가 30% 가까이 올라 상한가에 닿았다. 삼성전자 반도체 부문의 로봇이 올해 약 100대에서 2030년 1만대 이상으로 늘 수 있다는 전망이...",
+    "link": "https://www.junggi.co.kr/news/articleView.html?idxno=38677",
+    "pubDate": "2026-11-27",
+    "biz_word": false
+   },
+   {
+    "code": "879086",
+    "name": "(주)엠플러스",
+    "title": "HUG, 하나자산신탁과 '전월세 안심신탁' 활성화 맞손",
+    "description": "HUG는 지난 12일 부동산 개발·금융·임대 전문회사인 엠디엠플러스와 ‘전월세 안심신탁 활성화를 위한 업무협약’을 체결하고 우선 사업참여 주택 20세대에 대한 신청서를 받았다. 향후 신청 물량을 순차적으로 확대할...",
+    "link": "https://www.edaily.co.kr/News/Read?newsId=02240246645647688&mediaCodeNo=257&utm_source=naver&utm_medium=referral&utm_campaign=news_syndication&utm_content=original_article",
+    "pubDate": "2026-11-20",
+    "biz_word": false
+   },
+   {
+    "code": "981329",
+    "name": "다원넥스뷰",
+    "title": "GST 16%·HPSP 10% 급등…AI 반도체 투자 기대에 장비주 '기세등등'",
+    "description": "이밖에 서진시스템과 디아이, 브이엠, 예스티, 티씨케이, 한화비전, 에이팩트, 다원넥스뷰, 라온로보틱스, 프로텍, 로보스타, SFA, 미래산업, 로체시스템즈, 지앤비에스 에코, 네패스아크, AP시스템, 디바이스, 펨트론...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=506052",
+    "pubDate": "2026-11-19",
+    "biz_word": true
+   },
+   {
+    "code": "989856",
+    "name": "(주)원익아이피에스-진위FPD내자_ERP",
+    "title": "코스피 2%·코스닥 6% 급등…코스닥 매수 사이드카 발동",
+    "description": "88%) 등도 두 자릿수 안팎의 상승률을 나타냈다. 반도체 소재·부품·장비주도 상승 폭을 확대했다. 주성엔지니어링은 9.69%, 리노공업은 7.17%, 이오테크닉스는 3.67%, 원익IPS는 5.89% 올랐다. 심텍은 0.78% 하락했다.",
+    "link": "https://www.gokorea.kr/news/articleView.html?idxno=887498",
+    "pubDate": "2026-11-27",
+    "biz_word": false
+   },
+   {
+    "code": "981262",
+    "name": "㈜레인보우로보틱스",
+    "title": "코스피, 6% 급락 '4600선' 후퇴⋯하루 만에 급등분 반납",
+    "description": "에코프로비엠(4.64%), 에코프로(5.01%), 레인보우로보틱스(1.80%), 주성엔지니어링(11.42%), 로보티즈(1.87%), 심텍(6.51%), 리노공업(5.67%) 등이 내렸다. 미국 금리와 물가 지표에 따른 변동성 확대 가능성에 유의해야...",
+    "link": "http://www.inews24.com/view/2030383",
+    "pubDate": "2026-11-25",
+    "biz_word": false
+   },
+   {
+    "code": "876523",
+    "name": "(주)ANI",
+    "title": "[핫이슈] 연 4조 원광 굴리던 '인니 니켈왕'의 추락…글로벌 배터리 공...",
+    "description": "수사 대상에 오른 광산 기업은 PT 부미 센토사 자야(BSJ), PT 카르야 알람 아바디(KAA), PT 아디타 니켈 인도네시아(ANI), PT 알람 미트라 인다(AMI), PT 알람 미트라 인다 누그라하(AMID), PT HJ 등 총 6곳이다. 이 가운데 면적이...",
+    "link": "https://www.the-today.com/news/articleView.html?idxno=93302",
+    "pubDate": "2026-11-09",
+    "biz_word": false
+   },
+   {
+    "code": "876055",
+    "name": "아이엠티",
+    "title": "[52주] 최고가 4개, 최저가 122개... 코스피 4900선 하회",
+    "description": "1% 3,520 ★★★★ 40 아이엠티 6,160 ▼4.1% 6,100 ★★ 41 한컴 13,220 ▼3.9% 13,200 ★★★★★ 42 이랜텍 4,900 ▼3.9% 4,860 ★★★ 43 화승코퍼레이션 1,989 ▼3.9% 1,980 ★★★ 44 휴엠앤씨...",
+    "link": "https://www.itooza.com/common/iview.php?no=2026112009340102470",
+    "pubDate": "2026-11-20",
+    "biz_word": false
+   },
+   {
+    "code": "W01E4Q",
+    "name": "(주)저스템",
+    "title": "글로벌 반도체 설비 투자 확대…반도체 장비 관련주 무더기 '휘파람'",
+    "description": "에스티아이와 케이씨, 엘오티베큠, GST, 유니셈, 워트, 저스템, 지앤비에스 에코, 씨앤지하이테크, 한양이엔지도 관련 분야에서 관심을 받고 있다. 이들 기업은 반도체 제조용 세정·가스·진공·환경 제어 및 유틸리티 설비...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=502927",
+    "pubDate": "2026-11-11",
+    "biz_word": true
+   },
+   {
+    "code": "001S0C",
+    "name": "현대자동차",
+    "title": "통상 불확실성 여전…반도체 업계 “美 투자세액공제 연장 필요”",
+    "description": "이날 회의에는 이계인 대한상의 국제통상위원장(포스코인터내셔널 대표이사), 김정일 대한상의 상근부회장을 비롯해 삼성전자, SK, 현대자동차, LG에너지솔루션, 한화오션, 롯데, 두산, 효성중공업, 한국항공우주산업 등...",
+    "link": "https://www.edaily.co.kr/News/Read?newsId=01348086645649984&mediaCodeNo=257&utm_source=naver&utm_medium=referral&utm_campaign=news_syndication&utm_content=original_article",
+    "pubDate": "2026-11-27",
+    "biz_word": true
+   },
+   {
+    "code": "876367",
+    "name": "(주)피앤에스",
+    "title": "큐리오시스 두 자릿수 상승… 의료기기 테마에 무슨 호재 있나",
+    "description": "뷰웍스, 피앤에스로보틱스, 플라즈맵, 라메디텍, 덴티움, 바텍, 다이나믹솔루션, 아이센스, 제놀루션, 한스바이오메드, 원텍, 미래컴퍼니, 제테마도 상승 흐름을 보이고 있다. 일부 종목은 약세를 나타냈다....",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=502353",
+    "pubDate": "2026-11-09",
+    "biz_word": false
+   },
+   {
+    "code": "877215",
+    "name": "(주)톱텍",
+    "title": "글로벌 배터리 증설 기대감에 2차전지 장비주 '훨훨'…종목별 차별화",
+    "description": "믹싱과 가공 장비 분야에서는 대성하이텍, 대보마그네틱, 엠오티, 톱텍, 자비스, 탑엔지니어링, 피엔티엠에스... 대성하이텍과 엠오티, 톱텍, 탑엔지니어링 등은 제조 공정에 필요한 가공·자동화 설비 수요와 연관돼 있다....",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=502654",
+    "pubDate": "2026-11-10",
+    "biz_word": true
+   },
+   {
+    "code": "873160",
+    "name": "(주)케이엔에스",
+    "title": "글로벌 빅테크 로봇 투자 확대… 삼성전자·포스코DX 매수 유입 뚜렷",
+    "description": "구동 부품과 자동화 제어 분야에서는 유니테크노와 알에스오토메이션, MDS테크, 세나테크놀로지, 화천기공, 코윈로보틱스, 티로보틱스, 케이엔에스가 내림세를 보였다. 아이엘과 유진로봇, 클로봇, 나우로보틱스...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=502409",
+    "pubDate": "2026-11-09",
+    "biz_word": true
+   },
+   {
+    "code": "875781",
+    "name": "제너셈(주)",
+    "title": "반도체 장비주 상승랠리…후공정·테스트 기업에 매수세 봇물",
+    "description": "멜콘, 제너셈, 제이엔비, 시지트로닉스, HPSP, 마이크로투나노, 샘씨엔에스, 성우테크론, 씨앤지하이테크, 엔투텍, 아이에스티이, 마이크로컨텍솔, 미래반도체, 워트, LB세미콘, 기가비스, 미코, 엑사이엔씨, 엔시트론...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=502436",
+    "pubDate": "2026-11-09",
+    "biz_word": false
+   },
+   {
+    "code": "872554",
+    "name": "(주)로보스타",
+    "title": "코스닥 '껑충'...로보티즈·현대무벡스 등 로봇주 '질주'",
+    "description": "로봇주 가운데 레인보우로보틱스(12.21%), 로보티즈(7.49%), 원익홀딩스(4.37%), 현대무벡스(16.55%), 에스피지(3.68%), 휴림로봇(6.62%), 유일로보틱스(8.02%), 로보스타(8.39%), 하이젠알앤엠(8.47%) 등이 점프했다....",
+    "link": "http://www.choicenews.co.kr/news/articleView.html?idxno=173572",
+    "pubDate": "2026-11-27",
+    "biz_word": true
+   },
+   {
+    "code": "000ANH",
+    "name": "엘지디스플레이",
+    "title": "500대 기업 이익잉여금 1900조원 육박···삼성전자·SK하이닉스가 37% ...",
+    "description": "현금뿐 아니라 설비투자 등에 활용된 자금도 반영되기 때문에 기업이 보유한 현금성 자산과는 차이가... (2조702억원), LG디스플레이(1조7583억원), CJ CGV(1조4209억원) 등이 뒤를 이었다. LG에너지솔루션은 최근...",
+    "link": "https://www.smartbizn.com/news/articleView.html?idxno=160546",
+    "pubDate": "2026-11-25",
+    "biz_word": false
+   },
+   {
+    "code": "876190",
+    "name": "(주)테스",
+    "title": "[특징주] 주성엔지니어링, 장비 테마 매수세 유입에 급등…ALG 원천기술...",
+    "description": "함께 포함된 반도체 장비 테마 역시 전체 17위(평균 3.41%)를 기록하며 더코디(20.23%), 엑시콘(8.61%), 테크윙(8.11%), 테라뷰(7.56%), 테스(7.03%) 등이 일제히 오름세를 나타내고 있다. 테마 강세의 배경으로는 차세대...",
+    "link": "https://www.widedaily.com/news/articleView.html?idxno=304774",
+    "pubDate": "2026-11-26",
+    "biz_word": false
+   },
+   {
+    "code": "921220",
+    "name": "(주)클래시스",
+    "title": "미래에셋증권·JYP Ent. 폭등쇼…코리아 밸류업 지수 관련주에 무슨 이슈...",
+    "description": "이 밖에 더블유게임즈와 SOOP, 클래시스, 덴티움, 파마리서치, 에코프로에이치엔, 에스원, 종근당, 피에스케이홀딩스 등도 장중 하락 흐름을 보이고 있다. 통신업종의 SK텔레콤과 KT는 서로 다른 흐름을 나타내고 있으며...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=508391",
+    "pubDate": "2026-11-26",
+    "biz_word": false
+   },
+   {
+    "code": "981262",
+    "name": "㈜레인보우로보틱스",
+    "title": "AI 매도세 진정, ‘증안펀드’ 기대감에 4900선 회복… ‘팔자’ 외국인...",
+    "description": "외국인의 순매도 상위 10개 종목은 삼성전자, SK하이닉스, KB금융, 하나금융지주, KT&G, 현대모비스, 에이피알, 레인보우로보틱스, 한미약품, 두산이었다. 이번 주 기관 순매수 1위 종목은 삼성전자였다. 2~10위는...",
+    "link": "https://weekly.donga.com/3/all/11/6481000/1",
+    "pubDate": "2026-11-27",
+    "biz_word": false
+   },
+   {
+    "code": "926951",
+    "name": "(주)루켄테크놀러지스",
+    "title": "8.6세대 OLED 증착장비주 불기둥…선익시스템·야스 매수세 왜 몰렸나",
+    "description": "우리바이오와 한켐, 힘스, 파인테크닉스, 루켄테크놀러지스, 엘디티, 파인디앤씨, 포인트엔지니어링, 에이치엠넥스, 아이엘 등도 상승 종목에 이름을 올렸다. 반면 위지트와 피엔에이치테크, 이노테크는 약세를 보였다....",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=508587",
+    "pubDate": "2026-11-26",
+    "biz_word": false
+   },
+   {
+    "code": "000TZC",
+    "name": "앰코테크놀로지코리아(주)부평사업장(ME01)",
+    "title": "AI 반도체 호황, 한국과 대만의 성장률은 왜 다른가",
+    "description": "설계자동화 분야에서는 시놉시스(Synopsys), 케이던스(Cadence), 지멘스 EDA가 참여하며, 설계자산 분야에는 암(Arm), 패키징·조립 분야에는 ASE와 앰코(Amkor), 기판 분야에는 이비덴(IBIDEN)과 유니마이크론(Unimicron) 등이...",
+    "link": "https://www.koreaittimes.com/news/articleView.html?idxno=159561",
+    "pubDate": "2026-11-28",
+    "biz_word": false
+   },
+   {
+    "code": "989508",
+    "name": "삼성에스디아이(주)_ERP",
+    "title": "[코스피 지수선물 옵션] 삼성전자·한화에어로·효성중공업까지 '불기둥...",
+    "description": "레인보우로보틱스와 삼성SDI, 효성중공업, 한화에어로스페이스, 현대모비스 등도 상대적으로 강한 상승률을 기록했다. 로봇 관련 종목인 레인보우로보틱스의 상승은 제조업 자동화와 산업용 로봇 시장 확대에 대한...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=507598",
     "pubDate": "2026-11-24",
     "biz_word": false
    },
    {
-    "code": "W03C5Z",
-    "name": "(주)메이저",
-    "title": "다저스 비상! 이번 오프시즌에만 두 번째...우완 카스파리우스 토미 존...",
-    "description": "메이저리그 5경기 등판, 4 2/3이닝 던지며 5실점 허용했다. 트리플A에서도 12경기에서 10 1/3이닝 9실점에 그쳤다. 다저스는 이번 오프시즌 세스 할보센에 이어 벌써 두 명의 투수가 팔꿈치 수술을 받게됐다. [김재호...",
-    "link": "https://www.mk.co.kr/article/12219144",
-    "pubDate": "2026-11-26",
+    "code": "872524",
+    "name": "(주)지아이에스",
+    "title": "HBM 투자 기대 꺾였나…원익IPS·HPSP 등 전공정주도 '된서리'",
+    "description": "지아이에스와 그린광학, 에이치엠넥스, 팸텍, 이노테크, 미래산업, 제너셈, 디바이스 등이 매도 우위 흐름을 보였다. 레이저 가공 장비를 공급하는 레이저쎌과 반도체 검사 및 부품 관련 사업을 전개하는 기가레인도...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=506673",
+    "pubDate": "2026-11-22",
+    "biz_word": true
+   },
+   {
+    "code": "989816",
+    "name": "현대트랜시스(주)_ERP",
+    "title": "정의선, '완성차 투톱' 힘 싣고 계열사 수장 교체…미래 전환 속도낸다",
+    "description": "현대모비스와 현대트랜시스, 현대엔지니어링, 현대케피코 등 4개 계열사의 대표이사를 교체하고 현대차... 현대케피코에서는 생산라인 합리화와 품질관리 고도화를 추진했으며 인공지능(AI) 기반 비전검사 등 신기술을...",
+    "link": "https://www.apnews.kr/news/articleView.html?idxno=3053628",
+    "pubDate": "2026-11-27",
+    "biz_word": false
+   },
+   {
+    "code": "W06X1P",
+    "name": "LG에너지솔루션",
+    "title": "대구시, '2026 대구국제기계산업대전' 폐막…제조 AX·미래 전략산업 기...",
+    "description": "이번 전시회는 제조업의 인공지능 전환(AX)을 핵심 주제로 내세워 기존 기계·자동화 중심의 전시 영역을... 현대로템, LG에너지솔루션, 포스코퓨처엠, 삼성E&A 등 국내 주요 대기업 22개사의 구매 담당자가 참여한...",
+    "link": "https://www.m-i.kr/news/articleView.html?idxno=2021723",
+    "pubDate": "2026-11-22",
+    "biz_word": false
+   },
+   {
+    "code": "870505",
+    "name": "(주)쎄크",
+    "title": "AI 서버가 끌어올린 전자장비와기기…기판·MLCC부터 로봇·센서까지 확...",
+    "description": "포커스에이아이, 쎄크, 티에스아이, 에이치시티, 센코, 코셈, 케이지에이, 엔시스, 자비스, 인바이오젠 등이... 이 밖에 이랜시스와 제이스로보틱스는 모터 및 로봇 구동 부품, 센코는 가스센서, 쎄크와 코셈은 전자현미경...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=507617",
+    "pubDate": "2026-11-24",
+    "biz_word": true
+   },
+   {
+    "code": "989752",
+    "name": "엘지전자디지털어플라이언스연구소_ERP",
+    "title": "LH, '스마트건설·안전·AI EXPO' 참여…AI·로봇 기반 미래건설 기술 공...",
+    "description": "사족보행 로봇이 현장을 순찰하며 위험을 감지하는 피지컬 AI '늘봄 A-Eye'와 고위험 현장을 집중관제하는 '실시간 종합건설정보시스템(RICS)', 'LH-BIM 플랫폼' 등이 소개됩니다. 아울러 자이가이스트, LG CNS, LG전자와...",
+    "link": "http://www.paxetv.com/news/articleView.html?idxno=287859",
+    "pubDate": "2026-11-25",
+    "biz_word": true
+   },
+   {
+    "code": "870663",
+    "name": "(주)로보티즈",
+    "title": "코스피, 외인 1조 순매수에 4% 강세…코스닥 6.6%대 급등",
+    "description": "알테오젠(8.22%), 레인보우로보틱스(11.35%), 에코프로비엠(10.60%), 에코프로(11.09%), 주성엔지니어링(12.54%), 로보티즈(6.95%), 삼천당제약(11.96%), 심텍(1.66%), HLB(6.29%), 리노공업(10.16%) 등이 일제히 강세를 보이고...",
+    "link": "https://www.etoday.co.kr/news/view/2653917",
+    "pubDate": "2026-11-27",
+    "biz_word": false
+   },
+   {
+    "code": "876376",
+    "name": "(주)하이비젼시스템_ERP",
+    "title": "온디바이스 AI 스마트폰 확산…핸드셋 부품주 동반 강세",
+    "description": "하이비젼시스템, 인탑스, 파워로직스, 세경하이테크, 시노펙스, 팸텍도 매도 우위를 나타냈다. 이밖에 PS일렉트로닉스, 파인엠텍, 덕우전자, 디티씨, 영풍, 엑스플러스, MSDI 역시 내림세로 거래를 마쳤다. 시장에서는...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=502480",
+    "pubDate": "2026-11-09",
+    "biz_word": false
+   },
+   {
+    "code": "879086",
+    "name": "(주)엠플러스",
+    "title": "전기차·ESS·IT 수요 폭풍 몰려온다…대성하이텍·엔켐 급등에 삼아알...",
+    "description": "디아이티와 이노메트리, 코스모신소재, 제이스로보틱스가 오름세를 보이고 있으며, 한빛레이저와 나노신소재, 코칩, 엠플러스, 티에스아이도 상승권에서 움직이고 있다. PI첨단소재와 미코, 원익피앤이, 대주전자재료가...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=508821",
+    "pubDate": "2026-11-27",
+    "biz_word": false
+   },
+   {
+    "code": "989880",
+    "name": "(주)케이씨텍_ERP",
+    "title": "HBM 투자 기대 꺾였나…원익IPS·HPSP 등 전공정주도 '된서리'",
+    "description": "원익IPS와 유진테크, 테스, 피에스케이, 브이엠, 케이씨텍 등이 대표적이다. 에스티아이와 아이엠티, 이엘씨... 성우테크론, 케이씨텍, GST, SFA, 워트, 파크시스템스, 프로이천, 아이엠티, 유니테스트, 알에스오토메이션...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=506673",
+    "pubDate": "2026-11-22",
+    "biz_word": true
+   },
+   {
+    "code": "W01E4Q",
+    "name": "(주)저스템",
+    "title": "주성엔지니어링 ‘불기둥’...3분기 영업익 ‘껑충’ [오늘, 이 종목]",
+    "description": "3분기 매출 33% 증가한 781억원 영업이익 177억원·영업이익률 22.6% SFA반도체·저스템도 동반 상승 반도체... 저스템도 같은 시간 9.26% 오른 1만380원에 거래됐다. 다만 글로벌 메모리 수요 증가세가 올해 2분기 정점을...",
+    "link": "https://www.mk.co.kr/article/12202574",
+    "pubDate": "2026-11-09",
+    "biz_word": false
+   },
+   {
+    "code": "874592",
+    "name": "우신시스템",
+    "title": "전기차 성장 둔화에 부품주도 흔들…로봇·ESS 사업 다각화가 변수",
+    "description": "KG모빌리티와 한온시스템, 현대위아, 현대모비스, 화신, 엠에스오토텍, 우신시스템, 지엠비코리아, 에코플라스틱, 아진전자부품 등이 내림세다. 모터와 기계 부품 관련 기업인 디아이씨와 계양전기, SNT모티브, 경창산업...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=507056",
+    "pubDate": "2026-11-23",
+    "biz_word": true
+   },
+   {
+    "code": "878703",
+    "name": "(주)지아이에스",
+    "title": "대형 메모리株 조정에 중소형 반도체株 '신바람'…투자 시선은 설계 기...",
+    "description": "이 밖에 지아이에스와 성우테크론, 아이케이세미콘, 시지트로닉스, 아이텍, 티이엠씨씨엔에스 등도 매도 물량이 출회됐다. 이처럼 반도체 업종은 AI 반도체 설계와 일부 부품 기업을 중심으로 상승세가 나타났지만...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=505202",
+    "pubDate": "2026-11-17",
+    "biz_word": true
+   },
+   {
+    "code": "273930",
+    "name": "산일전기(주)",
+    "title": "[주간 거래소 기관] 삼성전자·LG엔솔 집중 매수…SK하이닉스는 팔았다",
+    "description": "반면 기관 순매도 상위 종목에는 SK하이닉스, 이수페타시스, 삼성전자우, 대덕전자, 삼성에스디에스, GS건설, LS, 코리아써키트, 산일전기, SK이노베이션 등이 이름을 올렸다. 전력기기 관련주인 산일전기와 LS...",
+    "link": "https://www.pinpointnews.co.kr/news/articleView.html?idxno=509063",
+    "pubDate": "2026-11-28",
+    "biz_word": false
+   },
+   {
+    "code": "989856",
+    "name": "(주)원익아이피에스-진위FPD내자_ERP",
+    "title": "코스피 6.2% 급락…하루 만에 4600대",
+    "description": "주성엔지니어링(-11.4%), 리노공업(-5.7%), 이오테크닉스(-8.9%), 원익IPS(-10.9%) 등 코스닥 반도체 소재·부품·장비주도 약세를 보였다. ◆ 제약·바이오 선방…화장품·보안주 강세 시가총액 상위 종목 가운데...",
+    "link": "https://www.koreareport.co.kr/news/articleView.html?idxno=55152",
+    "pubDate": "2026-11-25",
+    "biz_word": false
+   },
+   {
+    "code": "871712",
+    "name": "현대자동차(주)울산공장",
+    "title": "현대모비스는 팔고 OP모빌리티는 산다…램프사업 놓고 서로 다른 성장전...",
+    "description": "현대차·기아 차량용 애프터서비스(A/S) 부품 공급·유통사업은 매각 대상에서 제외된다. OP모빌리티가... 신성장동력으로 육성 중인 로봇사업도 구체화하고 있다. 현대모비스는 이달부터 휴머노이드 로봇 아틀라스에...",
+    "link": "https://www.smarttoday.co.kr/ko-kr/articles/114057",
+    "pubDate": "2026-11-25",
+    "biz_word": false
+   },
+   {
+    "code": "W07G4N",
+    "name": "제이피아이헬스케어(주)",
+    "title": "중기부, 명문장수기업 12곳 선정…올해까지 총 75개社",
+    "description": "중소기업 중에선 광신기계공업, 대진코스탈, 동방전기공업, 매일식품, 명진TSR, 삼우금속공업, 이노블록, 제이피아이헬스케어, 한국OSG, 합동물류가, 중견기업 가운데는 동화엔텍, 서흥이 각각 이름을 올렸다....",
+    "link": "http://www.metroseoul.co.kr/article/20261125500198",
+    "pubDate": "2026-11-25",
     "biz_word": false
    }
   ]
@@ -813,29 +813,44 @@
     "stock_excluded": 0,
     "kept": 6713
    }
+  },
+  {
+   "date": "2026-11-29",
+   "counts": {
+    "received": 67052,
+    "old": 26246,
+    "no_name": 14944,
+    "list_type": 6517,
+    "ctx": 4687,
+    "ctxwin": 3156,
+    "excl": 537,
+    "mq_reject": 549,
+    "mq_uncertain": 94,
+    "dup": 3934,
+    "stock_signal": 1241,
+    "stock_excluded": 0,
+    "kept": 6388
+   }
   }
  ],
  "paging": {
   "queries": 592,
-  "calls": 783,
-  "multi_page_queries": 44,
+  "calls": 742,
+  "multi_page_queries": 37,
   "capped_queries": [
    "우리시스템",
-   "한국자동기술산업",
-   "메이저",
    "(주)온",
    "O.N",
    "ON",
-   "세종산업",
    "(주)보고",
    "㈜보고",
    "현대자동차"
   ]
  },
  "match_stats": {
-  "ok": 11149,
-  "uncertain": 80,
-  "reject": 570,
+  "ok": 10322,
+  "uncertain": 94,
+  "reject": 549,
   "common_mode": [
    "W05TSW",
    "W01J8R",
@@ -855,33 +870,33 @@
    "001RY1"
   ],
   "ai_judge": {
-   "asked": 49,
-   "promoted": 2,
-   "kept": 47,
+   "asked": 64,
+   "promoted": 4,
+   "kept": 60,
    "failed": 0,
    "skipped_cap": 0
   }
  },
  "view_stats": {
-  "biz": 2518,
-  "gen": 9145,
-  "fold": 6887,
+  "biz": 3416,
+  "gen": 6982,
+  "fold": 8121,
   "other": 0,
-  "unclassified": 22557,
-  "old_drop": 16065
+  "unclassified": 19778,
+  "old_drop": 16317
  },
  "event_classify": {
   "on": true,
   "asked": 3000,
   "answered": 3000,
   "failed": 0,
-  "skipped_cap": 22383,
+  "skipped_cap": 19538,
   "calls": 200,
   "batches_submitted": 1,
   "batches_collected": 1,
   "batches_waiting": 0,
-  "input_tokens": 844237,
-  "output_tokens": 177466,
+  "input_tokens": 852663,
+  "output_tokens": 180193,
   "mode": "batch"
  }
 }
